@@ -43,12 +43,30 @@ mongo_cache=$(docker inspect --format '{{range .Args}}{{println .}}{{end}}' "$mo
 pg_mem=$(docker inspect --format '{{.HostConfig.Memory}}' "$pg_cid")
 mongo_mem=$(docker inspect --format '{{.HostConfig.Memory}}' "$mongo_cid")
 
+# Power: a laptop on battery or in a power-saving profile runs slower by varying amounts, so time only on mains.
+# Linux reads /sys and power-profiles-daemon; elsewhere (Docker Desktop on Windows) both are recorded as unknown.
+power_source=unknown
+for supply in /sys/class/power_supply/*; do
+    [ "$(cat "$supply/type" 2>/dev/null)" = "Mains" ] || continue
+    if [ "$(cat "$supply/online" 2>/dev/null)" = "1" ]; then
+        power_source=mains
+    elif [ "$power_source" = unknown ]; then
+        power_source=battery
+    fi
+done
+power_profile=$(powerprofilesctl get 2>/dev/null || echo unknown)
+if [ "$power_source" = battery ]; then
+    echo "run.sh: the machine is on battery; plug it in before timing (see bench/README.md, step 0)" >&2
+    exit 2
+fi
+
 BENCH_GIT_COMMIT=$commit
 BENCH_IMAGES=$(printf '{"app": "%s", "postgres": "%s", "mongodb": "%s"}' "$app_image" "$pg_image" "$mongo_image")
 BENCH_DOCKER_MEM=$(docker info --format '{{.MemTotal}}' | tr -d '\r')
 BENCH_MONGO_CACHE=$mongo_cache
 BENCH_MEM_LIMITS=$(printf '{"postgres": %s, "mongodb": %s}' "$pg_mem" "$mongo_mem")
-export BENCH_GIT_COMMIT BENCH_IMAGES BENCH_DOCKER_MEM BENCH_MONGO_CACHE BENCH_MEM_LIMITS
+BENCH_POWER=$(printf '{"source": "%s", "profile": "%s"}' "$power_source" "$power_profile")
+export BENCH_GIT_COMMIT BENCH_IMAGES BENCH_DOCKER_MEM BENCH_MONGO_CACHE BENCH_MEM_LIMITS BENCH_POWER
 
 module=bench.run
 if [ "${1:-}" = "explain" ]; then

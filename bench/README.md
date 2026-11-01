@@ -17,6 +17,8 @@ docker compose build bench etl
 docker compose stop web
 ```
 
+On a laptop, plug it in and set the performance power profile first (`powerprofilesctl set performance` on Linux, the Best performance mode on Windows), and leave the machine alone until the run ends. `bench/run.sh` refuses to time on battery and records the power source and profile of every invocation in `env.json`.
+
 Stop `web` before timing: its healthcheck queries both databases every 10 s, which would land inside timed calls. It stays stopped until the end of step 6.
 
 ## 1. Cache sizes for the run and recreated database containers
