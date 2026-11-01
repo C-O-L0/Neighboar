@@ -74,7 +74,7 @@ Diagrams are in `docs/diagrams/` (ERD, document model, architecture). `docs/inte
 You need Docker Desktop (Windows, macOS) or Docker Engine with the Compose plugin (Linux), Git, about 6 GB of free disk and 6 GB of memory for Docker. The [user manual](docs/user_manual.md) has every step in detail, with troubleshooting and platform notes.
 
 ```bash
-git clone https://github.com/C-O-L0/Neighboarhood.git neighboar && cd neighboar
+git clone https://github.com/C-O-L0/Neighboar.git && cd Neighboar
 cp .env.example .env                      # replace every change-me value (manual, step 3)
 docker compose up -d --build --wait web   # builds and starts both databases and the app
 ```
