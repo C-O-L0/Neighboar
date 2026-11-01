@@ -1,6 +1,6 @@
-# Neighboar user manual (draft)
+# Neighboar user manual
 
-This draft takes you from an empty folder to a running copy of Neighboar with the full data loaded, and shows how to use, test, back up and benchmark it. Phase 5 completes it with screenshots and the final walkthrough of every page.
+This manual takes you from an empty folder to a running copy of Neighboar with the full data loaded, walks through every page, and shows how to test, back up and benchmark it. The screenshots are from the full data.
 
 Every command is for Git Bash, run from the repository root unless a step says otherwise. You do not need Python, PostgreSQL or MongoDB on your own machine; Docker runs everything.
 
@@ -89,31 +89,108 @@ With no options this command only checks the files already in `data/raw/`. Expec
 docker compose run --rm etl
 ```
 
-This cleans the snapshot and loads both databases. It takes about a minute. It also writes 200 synthetic buyers and about 1,000 saved buildings, and sets the two demo passwords from your `.env`. It ends by counting rows and documents in both databases: PostgreSQL 275,471 rows and MongoDB 254,844 documents. `docs/import_report.md` lists the expected counts; they should match.
+On Linux, add `--user "$(id -u):$(id -g)"` to this and every other `etl` command (section 14). This cleans the snapshot and loads both databases. It takes about a minute. It also writes 200 synthetic buyers and about 1,000 saved buildings, and sets the two demo passwords from your `.env`. It ends by counting rows and documents in both databases: PostgreSQL 275,471 rows and MongoDB 254,844 documents. `docs/import_report.md` lists the expected counts; they should match.
 
 Running it again is safe: it reloads the same data. If you only want to try the app quickly, `docker compose run --rm etl python -m etl.pipeline --sample` loads the committed sample of about 6,000 sales instead (no snapshot files needed).
 
-## 7. Open the app and choose a database
+## 7. Use the app
 
-Open http://localhost:8000/.
+Open http://localhost:8000/. Neighboar answers questions about HDB resale flats from past sales: which places fit a budget, what a block is like, whether an asking price is fair and how prices have moved. Every figure comes from sales registered with HDB, not from flats for sale today; the footer says how recent the data is ("Sales registered up to Sep 2026").
 
-- Pages: Home, Search, Trends, Rankings, Food (hawker centres near a building), Health. Signed-in users also see Saved and Account; administrators also see Admin.
-- DB mode: the header has two links, PostgreSQL and MongoDB. The page you are on is shown from the database you choose, and every page that supports both gives the same answer from either one. Each result also shows how long the database call took, so you can compare. The choice follows you from page to page.
+The top bar has the three main tasks (Find a home, Check a price, Town trends). Signed in, it also shows your Shortlist with the number of blocks on it, and your name opens the account menu (Your account, Household, Admin for administrators, Sign out). The footer links to the Glossary, which explains every term marked with a "?", and to Advanced search.
+
+### 7.1 Find a home
+
+![The guided start on the home page](images/manual/01-home.png)
+
+Answer three questions: the flat type (each shows its usual size and price range over the last 12 months), your highest price, and optionally a block you want to live near with a distance of 1, 2 or 5 km. Show what fits opens the results.
+
+![Results: blocks within budget near a chosen block, with the map](images/manual/02-explore.png)
+
+Without a place, the results list towns first, each with its typical price, number of sales and the share sold within budget, then the blocks whose typical recent price fits, cheapest first. With a place, they list the blocks within the distance, nearest first. Each block shows tags that compare it with its town (for example Low floor or Shorter lease). More filters narrows the list by town, lease left and floor area. The map shows the blocks of the page; the list has every one of them, so nothing is lost if the map cannot load.
+
+### 7.2 A block's profile
+
+![The profile of 265 Bishan St 24](images/manual/03-block.png)
+
+Click any block to open its profile: when it was completed, the lease left, its flats, and how its recent sales compare with the town. Lease left later works out the lease in a future year or at an age you type, which matters for CPF and loans. Below are the recent prices by flat type, the latest sales, the five nearest hawker centres (also on the map) and Save to shortlist. To find a block directly, use Look up a block on the home page.
+
+### 7.3 Check a price
+
+![A price check for a 4-room flat in 265 Bishan St 24](images/manual/04-price-check.png)
+
+Enter the block, flat type, floor area and asking price, and optionally the storey. Neighboar compares the price per square metre with sales of the same flat type in the last 24 months: in the same block first, then on the same street, then in the town, whichever first has at least 5 sales. The bar shows the lowest, typical and highest of those sales and where your price falls; the table lists them.
+
+### 7.4 Town trends
+
+![The trend of 4-room prices in Bishan](images/manual/05-trends.png)
+
+Choose a town and flat type, and optionally a range of months. The summary compares the last 12 months with the 12 before; the chart shows the typical price each month, the 12-month typical price (dashed) and the number of sales. Show the monthly table gives every month's figures.
+
+### 7.5 Sign in, shortlist and compare
+
+Register with an email and a password of 10 to 128 characters (Register, top right), then sign in. On a block's profile, Save to shortlist adds it with an optional note. A shortlist holds up to 50 blocks.
+
+Tick 2 to 4 blocks on the shortlist and choose Compare selected to see them side by side for one flat type. "Lowest", "Longest" and "Most" mark the leader of a row; they are not a recommendation.
+
+![Three blocks compared](images/manual/06-compare.png)
+
+### 7.6 Share a shortlist with your partner
+
+Under Household (account menu), invite your partner by the email of their account. They see the invitation on their shortlist page and choose whether their own saved blocks join the shared list.
+
+![The invitation as the partner sees it](images/manual/07-invitation.png)
+
+After they accept, you both see and change one shared shortlist; each block and note says who added it.
+
+![The shared shortlist](images/manual/08-shortlist.png)
+
+A household has two people. Either can leave it from the Household page: the other keeps the shortlist and its notes, and the one who leaves starts with an empty one.
+
+![The household page](images/manual/09-household.png)
+
+### 7.7 Your account
+
+![The account page](images/manual/10-account.png)
+
+Your account shows your email, name, when you joined and when you were last active, with links to your shortlist and household.
+
+### 7.8 Admin
+
+![The admin page](images/manual/11-admin.png)
+
+Administrators (section 8) open Admin from the account menu. Record a sale adds a resale sale and Delete a sale removes one by its id. Each form says which database it writes to. Simulate failure makes the write fail just before it commits, to show that the whole change is rolled back and nothing is left half done. In PostgreSQL the town figures are refreshed in a separate step after each change, and Refresh town figures runs that step again by hand; in MongoDB the block's figures are updated in the same transaction.
+
+### 7.9 Demo mode: compare the two databases
+
+Neighboar stores everything in both PostgreSQL and MongoDB, and each page can be answered by either. Buyers always use PostgreSQL. For a presentation, turn on Demo mode with the switch at the bottom right of every page.
+
+![The demo bar on a block's profile, in MongoDB mode](images/manual/12-demo-bar.png)
+
+The dark demo bar then appears under the top bar. Switch between PostgreSQL and MongoDB there: the page reloads from the database you choose, with the same answer, and the bar lists every query the page ran with its time. Your choice follows you from page to page. Accounts, shortlists and households are stored separately in each database, so in demo mode you sign in to the database you have chosen, and switching shows that database's own shortlist.
+
+Behind the scenes (link in the demo bar) shows both databases' health, the queries of the last page you opened with the SQL or MongoDB command behind each one (Show the query plans adds their plans), and the results of the latest formal benchmark with its charts.
+
+![Behind the scenes after opening a block's profile in MongoDB mode](images/manual/13-behind.png)
+
+### 7.10 On a phone
+
+Every page works at phone width. Wide tables become one card per row, and the menu shortens its labels when you are signed in.
+
+<img src="images/manual/14-phone.png" alt="A block's profile on a phone" width="300">
 
 ## 8. Demo accounts and the admin page
 
-Two accounts are created by the load:
+Two accounts are created by the load, in both databases:
 
 | Account | Email | Role | Password |
 | --- | --- | --- | --- |
 | Buyer | `demo@neighboar.local` | normal user | your `DEMO_BUYER_PASSWORD` |
 | Administrator | `admin@neighboar.local` | administrator | your `DEMO_ADMIN_PASSWORD` |
 
-Use Sign in at the top right. A buyer can save buildings, add notes and revisit them under Saved. You can also register a new account from the Register link.
+Use Sign in at the top right. Signed in as the administrator, Admin in the account menu opens the admin page (section 7.8). A sale recorded in one database is not copied to the other, so in demo mode the two give different answers for that block until you reload the data.
 
-Signed in as the administrator, the Admin link opens the admin page, where you can record a new resale sale or delete one in the database selected by DB mode. The "Simulate failure" box demonstrates that a failed write is rolled back. In PostgreSQL mode the town figures are refreshed after each change (the page offers a manual refresh if that step fails); in MongoDB mode the block's statistics are updated in the same transaction. A sale recorded in one database is not copied to the other, so the two give different answers for that block until you reload.
-
-The other 198 synthetic buyers cannot be signed in to.
+The load also writes 198 other synthetic buyers, ten households and five open invitations, so the shortlist and household pages have realistic data in both databases. These synthetic buyers cannot be signed in to.
 
 ## 9. Run the tests
 
@@ -150,7 +227,7 @@ sh bench/run.sh --label demo --cases search_filtered --runs 3 --warmup 1
 
 This times one query case, 3 runs after 1 warm-up, in PostgreSQL and in MongoDB. Before it times anything it checks that both databases give the same answer, and it stops with a message if they do not. It prints a `done:` line when it finishes and writes the results under `bench/results/demo/`. Three runs are only a demonstration of the tool, not a result. Run it again with the same label only with `--replace`, or choose another label. The full procedure used for the report is in `bench/README.md`. You can delete `bench/results/demo/` afterwards.
 
-`bench/run.sh` needs the stack up and the full data loaded (step 6). On the sample it refuses with exit status 2, because it expects the full data's row count. It sets `HOST_UID` and `HOST_GID` itself.
+`bench/run.sh` needs the stack up and the full data loaded (step 6). On the sample it refuses with exit status 2, because it expects the full data's row count. On a laptop it also refuses on battery, because a laptop saving power runs slower by varying amounts; plug it in. It sets `HOST_UID` and `HOST_GID` itself.
 
 ## 12. Stop, restart and reset
 
@@ -165,7 +242,7 @@ After `down -v`, repeat step 4 and step 6.
 
 ## 13. Troubleshooting
 
-**MongoDB does not start on a new Linux kernel (6.19 or newer).** MongoDB 8.3.11 fails to start on Linux kernel 6.19 and newer (MongoDB bug SERVER-121912). The `mongodb` container exits or keeps restarting and `web` never becomes healthy. Check with `uname -r` on Linux, or `wsl uname -r` on Windows (Docker Desktop's WSL kernel was 6.18 when this was written and will reach 6.19 in time). `docker compose logs mongodb` shows the failure. The project pins the image version for fair comparisons, so there is no switch in `.env`; ask the team, who will choose a patched MongoDB version. Until then, use a machine or WSL kernel below 6.19. The project's CI runs on Ubuntu 22.04 for this reason.
+**MongoDB does not start on a new Linux kernel (6.19 or newer).** MongoDB 8.3.11 has been reported to fail to start on Linux kernel 6.19 and newer (MongoDB bug SERVER-121912). It did start and run normally on the project's Linux machine with kernel 7.2.8, so not every newer kernel is affected. The `mongodb` container exits or keeps restarting and `web` never becomes healthy. Check with `uname -r` on Linux, or `wsl uname -r` on Windows (Docker Desktop's WSL kernel was 6.18 when this was written and will reach 6.19 in time). `docker compose logs mongodb` shows the failure. The project pins the image version for fair comparisons, so there is no switch in `.env`; ask the team, who will choose a patched MongoDB version. Until then, use a machine or WSL kernel below 6.19. The project's CI runs on Ubuntu 22.04 for this reason.
 
 **Port 8000 is already in use.** `docker compose up` reports "port is already allocated" or "address already in use". Another program, or an earlier copy of this stack, holds the port.
 
@@ -200,6 +277,13 @@ docker compose run --rm etl
 - The `dbtools` image (backup and restore) uses the Ubuntu 22.04 arm64 build of the MongoDB Database Tools, because MongoDB publishes no Debian 12 arm64 build. It has not been tested on arm64. If `sh scripts/backup.sh` fails there, report it with the output; the rest of the stack does not depend on it.
 - Timings from the benchmark on a different machine are not comparable with the report's figures.
 
-**Linux.** These notes are untested: the project has been run on Windows only. Install Docker Engine and the Compose plugin and add your user to the `docker` group (`sudo usermod -aG docker $USER`, then log out and in) so you do not need `sudo`. Do not run the project's scripts with `sudo`, or the files in `backups/` and `bench/results/` become owned by root. Check your kernel with `uname -r` (see the MongoDB note in step 13).
+**Linux.** Tested on one machine: an Arch-based distribution with kernel 7.2.8 and Docker Engine with the Compose plugin, where the full load, the test suite and the formal benchmark run in `bench/results/2026-11-rerun/` all ran. Install Docker Engine and the Compose plugin and add your user to the `docker` group (`sudo usermod -aG docker $USER`, then log out and in) so you do not need `sudo`. Do not run the project's scripts with `sudo`, or the files in `backups/` and `bench/results/` become owned by root. Check your kernel with `uname -r` (see the MongoDB note in step 13).
 
-Likely problem on Linux: the app image runs as user id 10001 and the `etl` service has no user mapping, while the full load writes its cleaned files to `data/interim/` in the bind-mounted `./data`. On Linux that folder belongs to your user, so the load may stop with "permission denied". Workaround: `mkdir -p data/interim && sudo chown -R 10001 data/interim` (or make `data/` writable for user 10001) and run the load again. Docker Desktop on Windows and macOS is not affected, because it maps file ownership itself.
+The `etl` service writes its cleaned files to `data/interim/` in the bind-mounted `./data`, but runs as the image's user (id 10001), which cannot write a folder that belongs to you. The load stops with "Permission denied: '/srv/neighboar/data/interim'". Run every `etl` command as yourself instead, by adding `--user "$(id -u):$(id -g)"` after `run --rm`:
+
+```bash
+docker compose run --rm --user "$(id -u):$(id -g)" etl
+docker compose run --rm --user "$(id -u):$(id -g)" etl python -m etl.download
+```
+
+Docker Desktop on Windows and macOS does not need this, because it maps file ownership itself. `bench/run.sh`, `scripts/backup.sh` and `scripts/restore.sh` already run as your user.
