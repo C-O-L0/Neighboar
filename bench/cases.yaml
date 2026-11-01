@@ -172,6 +172,49 @@ cases:
       - {label: 5room-2023, args: {flat_type: 5 ROOM, start: 2023-01-01, end: 2024-01-01}}
       - {label: 3room-2019, args: {flat_type: 3 ROOM, start: 2019-01-01, end: 2020-01-01}}
 
+  - id: towns_fit
+    pair: live
+    note: Explore's towns that fit (UC1). Every town's recent median, sales and share within budget for one flat type over the 12 months to the data month.
+    pg: {module: bench.calls, name: pg_towns_fit}
+    mongo: {module: bench.calls, name: mongo_towns_fit}
+    params:
+      - {label: 4room-650k, args: {flat_type: 4 ROOM, budget: "650000", end: 2026-09-01}}
+      - {label: 3room-450k, args: {flat_type: 3 ROOM, budget: "450000", end: 2026-09-01}}
+      - {label: 5room-900k, args: {flat_type: 5 ROOM, budget: "900000", end: 2026-09-01}}
+
+  - id: blocks_fit
+    pair: live
+    note: Explore's blocks that fit (UC1, UC9), first page of 20 with the total. The last set filters by distance from a chosen block.
+    resolve: building
+    pg: {module: bench.calls, name: pg_blocks_fit}
+    mongo: {module: bench.calls, name: mongo_blocks_fit}
+    params:
+      - {label: 4room-800k, args: {flat_type: 4 ROOM, budget: "800000", end: 2026-09-01}}
+      - {label: 4room-800k-bishan-60y, args: {flat_type: 4 ROOM, budget: "800000", town: BISHAN, min_lease: 60, end: 2026-09-01}}
+      - {label: 5room-1m-near-275A-2km, args: {flat_type: 5 ROOM, budget: "1000000", radius: 2000, block: 275A, street: BISHAN ST 24, end: 2026-09-01}}
+
+  - id: blocks_near
+    pair: geo
+    note: Located blocks within a radius of a block, nearest first (UC9). PostgreSQL computes Haversine over every located block; MongoDB uses $geoNear on a 2dsphere index.
+    resolve: building
+    pg: {module: bench.calls, name: pg_blocks_near}
+    mongo: {module: bench.calls, name: mongo_blocks_near}
+    params:
+      - {label: 275A-bishan-st-24-1km, args: {block: 275A, street: BISHAN ST 24, radius_m: 1000}}
+      - {label: 66-marine-dr-2km, args: {block: "66", street: MARINE DR, radius_m: 2000}}
+      - {label: 4-queens-rd-5km, args: {block: "4", street: "QUEEN'S RD", radius_m: 5000}}
+
+  - id: comparables
+    pair: live
+    note: Price check comparables (UC4), one level per set over the 24 months to the data month, latest first.
+    resolve: building
+    pg: {module: bench.calls, name: pg_comparables}
+    mongo: {module: bench.calls, name: mongo_comparables}
+    params:
+      - {label: block-275A-bishan-st-24-4room, args: {level: block, block: 275A, street: BISHAN ST 24, town: BISHAN, flat_type: 4 ROOM, end: 2026-09-01}}
+      - {label: street-marine-dr-3room-storey, args: {level: street, block: "66", street: MARINE DR, town: MARINE PARADE, flat_type: 3 ROOM, storey: 7, end: 2026-09-01}}
+      - {label: town-bukit-timah-5room, args: {level: town, block: "4", street: "QUEEN'S RD", town: BUKIT TIMAH, flat_type: 5 ROOM, end: 2026-09-01}}
+
   - id: stats_rebuild
     pair: precomputed
     note: Precomputed summaries, not result-equivalent. refresh_town_stats() (one materialised view) against rebuild_all_stats ($merge into every block). Takes no parameters, so its three sets are repetitions (rep-1 to rep-3).
@@ -193,3 +236,14 @@ cases:
       - {label: 275A-bishan-st-24, args: {block: 275A, street: BISHAN ST 24, month: 2024-06-01, flat_type: 4 ROOM, flat_model: Improved, storey_min: 4, storey_max: 6, floor_area_sqm: {"$decimal": "92.0"}, remaining_lease_months: 900, resale_price: {"$decimal": "650000.00"}}}
       - {label: 66-marine-dr, args: {block: "66", street: MARINE DR, month: 2024-06-01, flat_type: 3 ROOM, flat_model: New Generation, storey_min: 7, storey_max: 9, floor_area_sqm: {"$decimal": "67.0"}, remaining_lease_months: 600, resale_price: {"$decimal": "480000.00"}}}
       - {label: 4-queens-rd, args: {block: "4", street: "QUEEN'S RD", month: 2024-06-01, flat_type: 5 ROOM, flat_model: Standard, storey_min: 1, storey_max: 3, floor_area_sqm: {"$decimal": "110.0"}, remaining_lease_months: 700, resale_price: {"$decimal": "900000.00"}}}
+
+  - id: household_accept_leave
+    pair: write
+    note: Each timed run invites (untimed), accepts with the partner's blocks merged and leaves, each one transaction timed as its own part, then puts both synthetic buyers back as they were. Runs as app_admin like the other write cases; app_rw has the same household grants.
+    writes: true
+    pg: {module: bench.calls, name: pg_household_accept_leave}
+    mongo: {module: bench.calls, name: mongo_household_accept_leave}
+    params:
+      - {label: buyers-35-40, args: {inviter_id: 35, invitee_id: 40}}
+      - {label: buyers-42-44, args: {inviter_id: 42, invitee_id: 44}}
+      - {label: buyers-46-37, args: {inviter_id: 46, invitee_id: 37}}

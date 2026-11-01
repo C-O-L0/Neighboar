@@ -32,12 +32,15 @@ def test_the_cases_of_the_spec_are_all_there():
         "search_filtered", "search_type_month", "search_price_sort", "search_unfiltered", "trends_series",
         "rankings_year", "building_page", "building_recent_lookup", "town_stats_read", "food_town",
         "median_exact", "median_approx", "stats_rebuild", "admin_record_delete",
+        # task T17: the queries of the new screens
+        "towns_fit", "blocks_fit", "blocks_near", "comparables", "household_accept_leave",
     }  # fmt: skip
 
 
 def test_write_cases_are_flagged_and_the_defaults_are_50_and_5():
     cases = {c.id: c for c in load_cases()}
-    assert {i for i, c in cases.items() if c.writes} == {"stats_rebuild", "admin_record_delete"}
+    writes = {i for i, c in cases.items() if c.writes}
+    assert writes == {"stats_rebuild", "admin_record_delete", "household_accept_leave"}
     assert (cases["search_filtered"].runs, cases["search_filtered"].warmup) == (50, 5)
     assert (cases["admin_record_delete"].runs, cases["admin_record_delete"].warmup) == (50, 5)
 
@@ -53,7 +56,8 @@ def test_pairs_follow_the_spec():
     assert pairs["building_recent_lookup"] == "embedded_vs_lookup"
     assert pairs["town_stats_read"] == pairs["stats_rebuild"] == "precomputed"
     assert pairs["median_exact"] == pairs["median_approx"] == "median"
-    assert pairs["food_town"] == "geo"
+    assert pairs["food_town"] == pairs["blocks_near"] == "geo"
+    assert pairs["household_accept_leave"] == pairs["admin_record_delete"] == "write"
     notes = {c.id: c.note for c in load_cases()}
     assert "not result-equivalent" in notes["town_stats_read"] and "not result-equivalent" in notes["stats_rebuild"]
 

@@ -47,6 +47,8 @@ def resolve_building_ids(cases: list[BenchCase], pg_conn) -> None:
         if case.resolve != "building":
             continue
         for ps in case.params:
+            if "block" not in ps.args:  # a set without a block (blocks_fit without a place)
+                continue
             building_id = repo.find_id(ps.args["block"], ps.args["street"])
             if building_id is None:
                 raise LookupError(f"case {case.id}: no block {ps.args['block']} {ps.args['street']} in the database")

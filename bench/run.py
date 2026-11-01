@@ -292,17 +292,27 @@ def building_ids(case: BenchCase, h: Handles) -> list[int]:
 
 
 def state_snapshot(case: BenchCase, h: Handles) -> dict:
-    """What a write case must leave unchanged: db_counts, the affected building pages in both databases, the MV."""
+    """What a write case must leave unchanged: db_counts, the affected building pages in both databases, the MV and
+    the buyers a household case uses (shortlists, last active time, household), in both databases."""
     ids = building_ids(case, h)
     mv = h.pg_admin.execute(
         "SELECT town_id, flat_type_id, month, n, median_price, avg_psm FROM mv_town_month_stats"
         " ORDER BY town_id, flat_type_id, month"
     ).fetchall()
+    buyers = sorted({ps.args[k] for ps in case.params for k in ("inviter_id", "invitee_id") if k in ps.args})
     return {
         "counts": db_counts.collect(h.pg_admin, h.mongo),
         "pg_buildings": [PgBuildingRepo(h.pg_admin).get(i) for i in ids],
         "mongo_buildings": [MongoBuildingRepo(h.mongo).get(i) for i in ids],
         "mv": mv,
+        "pg_buyers": h.pg_admin.execute(
+            "SELECT b.buyer_id, b.last_active_at, s.building_id, s.note, s.saved_at,"
+            " EXISTS (SELECT 1 FROM household_member m WHERE m.buyer_id = b.buyer_id)"
+            " FROM buyer b LEFT JOIN saved_building s USING (buyer_id) WHERE b.buyer_id = ANY(%s)"
+            " ORDER BY 1, 3",
+            (buyers,),
+        ).fetchall(),
+        "mongo_buyers": list(h.mongo.buyers.find({"_id": {"$in": buyers}}).sort("_id", 1)),
     }
 
 
