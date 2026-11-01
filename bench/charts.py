@@ -86,8 +86,13 @@ def collapse(rows: Sequence[dict], keys: Sequence[str]) -> dict[tuple, tuple[flo
 
 
 def latency_data(rows: Sequence[dict]) -> tuple[list[str], dict[tuple, tuple[float, float]]]:
-    """Case order as in the file; the refresh half of an admin write is not a latency of the case."""
-    kept = [r for r in rows if r["part"] != "refresh"]
+    """Case order as in the file; the refresh half of an admin write is not a latency of the case. A case timed in
+    named parts (household accept and leave) gets one bar per part."""
+    kept = [
+        r if r["part"] in ("call", "write") else {**r, "case": f"{r['case']} ({r['part']})"}
+        for r in rows
+        if r["part"] != "refresh"
+    ]
     cases = list(dict.fromkeys(r["case"] for r in kept))
     return cases, collapse(kept, ("case", "db"))
 

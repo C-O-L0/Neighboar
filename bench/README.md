@@ -4,6 +4,8 @@ The formal full-data run, followed in this order. Every command is for Git Bash,
 
 Results go to `bench/results/2026-11-full/`, in three folders: `f100/` (all of the full data), `f50/` and `f25/`. A label with one slash, such as `2026-11-full/f100`, makes that folder tree; the invocations of step 3 all append into the one folder.
 
+To rerun the whole benchmark (as task T17 does after adding cases), delete `bench/results/2026-11-full/` first (git history keeps the earlier run) and follow every step below; the new `env.json` records the new commit.
+
 Every `bench/run.sh` call collects the host facts (commit, image ids, Docker memory, the cache size the running MongoDB was started with), refuses to time if `bench.verify` or the database counts fail, and prints a `done:` line on success. A refusal exits with status 2 and changes nothing.
 
 ## 0. Before you start
@@ -51,7 +53,7 @@ sh bench/run.sh --label 2026-11-full/f100 --throughput
 sh bench/run.sh explain --label 2026-11-full/f100
 ```
 
-The first runs every read case (3 parameter sets of 50 runs, 5 warm-up calls each) and `bench.verify`. A second read run into the same label refuses unless you add `--replace`. The second command runs only the write cases (`stats_rebuild`, `admin_record_delete`), the third only the throughput levels (1, 4 and 8 worker processes, about 7 minutes), and the last the index on and off comparison.
+The first runs every read case (3 parameter sets of 50 runs, 5 warm-up calls each) and `bench.verify`. A second read run into the same label refuses unless you add `--replace`. The second command runs only the write cases (`stats_rebuild`, `admin_record_delete`, `household_accept_leave`), the third only the throughput levels (1, 4 and 8 worker processes, about 7 minutes), and the last the index on and off comparison.
 
 Check afterwards that `bench/results/2026-11-full/f100/env.json` shows 1 GB in both cache fields, 241,357 sales in both databases, `"fraction"` of 1 and four entries under `invocations`.
 
@@ -106,7 +108,7 @@ export HOST_UID=$(id -u) HOST_GID=$(id -g)
 docker compose run --rm bench python -m bench.charts bench/results/2026-11-full
 ```
 
-This writes `latency_by_case`, `throughput`, `scaling` and `index_on_off`, each as a PNG (300 dpi, 16 cm wide) and an SVG, into the same folder. Where a chart needs one number per case and database, the median is the median of the three parameter sets' medians and the p95 whisker is the largest of the three p95 values. The refresh half of `admin_record_delete` is not charted. `scaling.png` shows the cases that were run at all three fractions.
+This writes `latency_by_case`, `throughput`, `scaling` and `index_on_off`, each as a PNG (300 dpi, 16 cm wide) and an SVG, into the same folder. Where a chart needs one number per case and database, the median is the median of the three parameter sets' medians and the p95 whisker is the largest of the three p95 values. The refresh half of `admin_record_delete` is not charted; `household_accept_leave` gets one bar for accept and one for leave. `scaling.png` shows the cases that were run at all three fractions.
 
 ## Notes
 
