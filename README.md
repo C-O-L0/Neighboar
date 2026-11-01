@@ -1,156 +1,150 @@
-# HDB Neighbourhood Explorer - Team Brief
+# Neighboar
 
 ![Neighboar](./images/Neighboar.png)
 
-## What we are building
+Neighboar helps first-time buyers of an HDB resale flat in Singapore decide where to look and what to pay. It answers questions from every resale sale registered with HDB since January 2017: which towns and blocks fit a budget, what a block is like, whether an asking price is fair, and how prices have moved. Two people buying together can share one shortlist.
 
-An HDB neighbourhood explorer for prospective buyers. It uses historical HDB resale transactions, HDB building information, and hawker-centre locations to let a user compare towns and individual buildings by flat type, time period, floor area, past resale prices, and food-amenity access.
+It is the INF2003 database project of Team 65. Every feature is built twice, once on PostgreSQL and once on MongoDB, over the same data, and the two must give the same answers.
 
-Registered users can save individual buildings, add comparison notes, and revisit their saved list. Historical transactions are evidence of previous sales, not current property listings.
+## Why
 
-The first demonstrable query is: "For a selected flat type and period, how do historical resale prices compare across towns?"
+**For buyers.** A resale flat is the largest purchase most Singapore households make, and HDB publishes every resale sale, but as a raw table of 240,000 rows. A couple with a budget and a parent's block to live near cannot easily turn that into "which blocks fit, and is this asking price fair?". Neighboar does that, and it is honest about the data: these are past sales, not flats for sale today, and every figure says how many sales it rests on.
 
-## Why we are building it
+**For the course.** The assignment is to build a real application on an existing relational database and an existing non-relational one, not a custom engine, and to compare them. The same domain is modelled both ways: a normalised PostgreSQL schema with constraints, triggers and a materialised view, and a MongoDB model that embeds what a page reads together. The two implementations sit behind one set of repository interfaces, so every page can be answered by either database, equivalence tests prove the answers match, and a benchmark compares them on the same data under documented conditions.
 
-This is an INF2003 database application, not a custom database engine. The project demonstrates how the same domain can be designed and queried with a relational DBMS and a document DBMS.
+## What it does
 
-It gives us credible real-world data, meaningful CRUD through accounts and saved buildings, advanced aggregation queries, and a fair performance comparison using equivalent results and the same source data.
+| Page | What a buyer does there |
+| --- | --- |
+| Find a home | Three questions (flat type, budget, optionally a block to live near), then the towns and blocks that fit, with a map |
+| Block profile | When it was built, lease left (now or in a chosen year), recent prices against the town, latest sales, nearest hawker centres |
+| Check a price | Compare an asking price per square metre with sales in the same block, street or town over 24 months |
+| Town trends | Monthly typical price and sales for a town and flat type, with a 12-month line |
+| Shortlist and compare | Save blocks with notes (up to 50), compare 2 to 4 side by side |
+| Household | Invite a partner and share one shortlist; accept merges both lists in one transaction |
+| Admin | Record or delete a sale; a "simulate failure" option shows the rollback |
+| Demo mode | For presenters: switch each page between PostgreSQL and MongoDB, see every query and its time, and open "Behind the scenes" for health, query plans and benchmark results |
 
-## Chosen technology
+The [user manual](docs/user_manual.md) walks through every page with screenshots.
 
-| Layer | Choice | Purpose |
-| --- | --- | --- |
-| Backend and GUI | Python 3.12, FastAPI, Jinja2 templates, vanilla JavaScript and CSS | A compact server-rendered web application with a graphical browser interface. It lets us keep database queries visible for learning. |
-| Relational DBMS | PostgreSQL 18.6 | Tables, foreign keys, constraints, joins, views, indexes, and SQL analytics. |
-| Document DBMS | MongoDB Community Server 8.3.11 | Document modelling, embedding, indexing, and aggregation pipelines. |
-| Database clients | psycopg 3 and PyMongo | Direct Python access to PostgreSQL and MongoDB. |
-| Runtime | Docker Compose | One reproducible local stack for the app and both databases. |
-| Testing | pytest plus browser-level checks for key user flows | Verify imports, queries, CRUD, and user-visible behaviour. |
-| Collaboration | GitHub repository, Issues, pull requests, and a shared project board | Version control, task ownership, review, and traceable decisions. |
+## Stack
 
-Pinning the PostgreSQL and MongoDB container image versions avoids every teammate receiving a different database release. PostgreSQL 18.6 is the current stable supported release and `postgres:18.6-bookworm` is available as an official image. MongoDB's verified Community Server image provides `8.3.11-ubi8-slim`. [PostgreSQL documentation](https://www.postgresql.org/docs/18/), [PostgreSQL image tags](https://hub.docker.com/_/postgres/tags), [MongoDB image tags](https://hub.docker.com/r/mongodb/mongodb-community-server/tags)
+| Layer | Choice |
+| --- | --- |
+| Web app | Python 3.12, FastAPI, Jinja2 server-rendered pages, vanilla JavaScript and CSS; Chart.js and Leaflet vendored, OpenStreetMap tiles |
+| Relational database | PostgreSQL 18.6 (psycopg 3) |
+| Document database | MongoDB 8.3.11 as a single-node replica set, for transactions (PyMongo) |
+| Runtime | Docker Compose; nothing else is needed on the host |
+| Data pipeline | Python with pandas and parquet (`etl/`) |
+| Tests | pytest: unit, integration against the running stack, equivalence between the databases, negative tests of every integrity rule |
+| Benchmark | `bench/`: timed cases, throughput, scaling and index on/off, with charts |
+| CI | GitHub Actions: lint (ruff), the whole stack on the sample data, every test |
 
-## How we will build it
+Both database images are pinned to exact versions, so every machine and the benchmark run the same releases. The app connects with least-privilege accounts: buyers' pages use a read-write role without schema rights, the admin routes a separate role, and the benchmark's reads a select-only role.
 
-1. **Data pipeline** - download the official resale and property CSVs plus hawker-location data, retain a dated source manifest, clean values, map HDB property town codes to resale town names, and report unmatched addresses.
-2. **PostgreSQL design** - the progress report committed eight tables in 3NF: `town`, `building`, `flat_type`, `flat_model`, `building_flat_supply`, `resale_transaction`, `buyer` and `saved_building`. The implementation has thirteen: it adds `hawker_centre`, needed for the Haversine food-access query, and four for households sharing a shortlist (`household`, `household_member`, `household_invitation`, `household_saved`). Town to building and building to transaction are 1:M, transaction to flat type and flat model are M:1, and `building_flat_supply` and `saved_building` resolve two M:N relationships.
-3. **MongoDB design** (as committed in the progress report) - `building_profiles` (block details, recent sales and price statistics embedded for single-read pages), `resale_transactions` (full history), `buyers` (saved blocks embedded) and `hawker_centres` (GeoJSON with a 2dsphere index). The implementation adds `households` (two members and the shared shortlist embedded) and `invitations`.
-4. **Shared features** - implement equivalent search, filtering, aggregation, building detail, and saved-building operations. The UI can let reviewers select the PostgreSQL or MongoDB implementation for supported comparison queries.
-5. **Advanced work** - add indexed trend/ranking queries, explain query plans, test data constraints, measure equivalent query latency and throughput, and report tradeoffs.
+## Data
 
-Proximity method: every residential block is geocoded once through OneMap (`etl/geocode.py`) and the result is committed in `data/cache/block_coordinates.csv`. The app never calls an external API at run time. Food access uses Haversine distance in PostgreSQL and `$geoNear` in MongoDB.
+Three public datasets from [data.gov.sg](https://data.gov.sg), pinned as one snapshot retrieved on 26 September 2026 (`snapshot-2026-09`). `etl/manifest.json` holds each file's SHA-256, and the loader refuses any file that does not match.
 
-The detailed build plan, schemas, equivalence rules and timeline are in [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md).
+| File | Publisher | Rows | Covers |
+| --- | --- | ---: | --- |
+| [Resale flat prices based on registration date from Jan 2017 onwards](https://data.gov.sg/datasets/d_8b84c4ee58e3cfc0ece0d773c8ca6abc/view) | Housing & Development Board | 241,357 | Every resale sale registered from Jan 2017 to Sep 2026 |
+| [HDB Property Information](https://data.gov.sg/datasets/d_17f5382f26140b1fdae0ba2ef6239d2f/view) | Housing & Development Board | 13,357 | Every HDB block: address, year completed, flats by type |
+| [Hawker Centres (GeoJSON)](https://data.gov.sg/datasets/d_4a086da0a5553be1d89383cd90d07ecd/view) | National Environment Agency | 129 | Hawker centres with their locations and status |
 
-The rules every Phase 2 feature follows (repository layout, DTO types, DB-mode switch, timing, equivalence tests, formatting filters) are in [`docs/conventions.md`](docs/conventions.md).
+Also used:
 
-## Quick start
+- **Block coordinates.** Every residential or resold block (10,797) was geocoded once through OneMap (`etl/geocode.py`); the result is committed in `data/cache/block_coordinates.csv`, so the app never calls an external service for data.
+- **Synthetic buyers.** Every load writes 200 buyers with about 1,000 saved blocks, 10 households and 5 open invitations to both databases from a fixed seed (`etl/synth_buyers.py`). Two of them are the documented demo accounts.
+- **A committed sample** of about 6,000 sales in three towns (`data/sample/`), which CI and quick trials load instead of the full snapshot.
 
-Needs Docker Desktop (Windows or macOS) or Docker Engine with the Compose plugin (Linux).
+The three source files are not in the repository. data.gov.sg updates the resale dataset monthly, so a fresh download will not match the pinned checksums; the snapshot files come with the submission (see the manual, step 5). `docker compose run --rm etl python -m etl.download --check-live` reports how far the live datasets have moved since.
 
-A step-by-step guide from a fresh clone to the loaded app, tests, backup and benchmark is in the [user manual](docs/user_manual.md) (draft).
+Cleaning (`etl/clean.py`) maps HDB's property town codes to town names, normalises block and street keys (upper case, trimmed, single spaces) so the two HDB files join, and keeps every sale: all 241,357 load, with one stub block for a sold address missing from the property dataset. `docs/import_report.md` records every count, and `docs/data_dictionary.md` every column.
 
-```bash
-cp .env.example .env        # then replace every change-me value (Windows: copy .env.example .env)
-docker compose up --build   # first run pulls images and builds, a few minutes
-```
+## How the two databases model it
 
-Open http://localhost:8000/demo ("Behind the scenes"). Both databases should show as up, connected as `app_rw` (PostgreSQL) and `app` (MongoDB, replica set `rs0`). The same check as JSON is http://localhost:8000/api/health.
+- **PostgreSQL** (`db/postgres/`): 13 tables in third normal form: towns, blocks, flat types and models, flats by type per block, sales, hawker centres, buyers and their saved blocks, and four for households. Foreign keys, checks and triggers enforce the rules (a household has at most two members, a shared shortlist at most 50 blocks, a member has no personal shortlist). A materialised view holds the monthly town figures.
+- **MongoDB** (`db/mongo/`): `building_profiles` embeds a block's details, latest sales and statistics so a block page is one read; `resale_transactions` keeps the full history; `buyers` embeds saved blocks; `households` embeds members and the shared shortlist; `hawker_centres` and block locations use 2dsphere indexes. Collection validators and unique indexes enforce the same rules; multi-document changes run in transactions.
 
-## Docker Compose workflow
+Diagrams are in `docs/diagrams/` (ERD, document model, architecture). `docs/integrity_matrix.md` maps each rule to how both databases enforce it and the test that proves it.
 
-`compose.yaml` runs four services:
+## Run it
 
-```text
-postgres  PostgreSQL 18.6, named volume pgdata
-mongodb   MongoDB 8.3.11 as a single-node replica set (needed for transactions), named volume mongodata
-migrate   one-shot: initiates the replica set, creates least-privilege roles and users, applies schema files, then exits
-web       FastAPI application at http://localhost:8000 (bound to localhost only), starts after migrate succeeds
-etl       on demand only (profile "tools"): verifies the snapshot, cleans it, loads both databases
-dbtools   on demand only (profile "tools"): pg_dump, pg_restore, mongodump and mongorestore for scripts/backup.sh and scripts/restore.sh
-```
-
-Compose gives the services a private network, lets the application use service names such as `postgres` and `mongodb`, and starts the full stack with one command:
-
-```bash
-docker compose up --build
-```
-
-### Loading the data
-
-The databases start empty. Load them once (and again after `docker compose down -v`):
+You need Docker Desktop (Windows, macOS) or Docker Engine with the Compose plugin (Linux), Git, about 6 GB of free disk and 6 GB of memory for Docker. The [user manual](docs/user_manual.md) has every step in detail, with troubleshooting and platform notes.
 
 ```bash
-# Full snapshot: put the three source files in data/raw first
-python -m etl.download --from <folder with the 26 Sep 2026 files>
-docker compose run --rm etl
-
-# Or the committed ~6k-sale sample (no download needed; this is what CI loads)
-docker compose run --rm etl python -m etl.pipeline --sample
+git clone https://github.com/C-O-L0/Neighboarhood.git neighboar && cd neighboar
+cp .env.example .env                      # replace every change-me value (manual, step 3)
+docker compose up -d --build --wait web   # builds and starts both databases and the app
 ```
 
-The full load takes about a minute: PostgreSQL gets 275,471 rows, MongoDB 254,844 documents, both from the same cleaned files in `data/interim/`. `python -m etl.pipeline` ends by counting rows and documents in both databases (`etl/db_counts.py`) and `docs/import_report.md` shows those counts next to the cleaning output (rows accepted by cleaning). Schema files are in `db/postgres/`, MongoDB validators in `db/mongo/validators/`, column definitions in `docs/data_dictionary.md`, diagrams in `docs/diagrams/`.
+Load the data, either the full snapshot (put the three files in `data/raw/` first) or the committed sample:
 
-Every load also writes 200 synthetic buyers (ids 1 to 200) and about 1,000 saved blocks to both databases (`etl/synth_buyers.py`, fixed seed, so the same data every time). Add two lines to your `.env` first, each a password of your own choosing of 10 to 128 characters that does not start with `change-me`:
-
-```text
-DEMO_BUYER_PASSWORD=...
-DEMO_ADMIN_PASSWORD=...
+```bash
+docker compose run --rm etl python -m etl.download   # checks the three files against the manifest
+docker compose run --rm etl                          # full load, about a minute
+docker compose run --rm etl python -m etl.pipeline --sample   # or: the sample, no files needed
 ```
 
-They set the passwords of the two documented accounts, `demo@neighboar.local` (a normal buyer) and `admin@neighboar.local` (an administrator). The other 198 buyers (`buyer003@example.com` to `buyer200@example.com`) have random passwords that are thrown away, so nobody can log in as them. The pipeline stops before cleaning if either variable is missing or too short. If an account of yours already uses one of these ids or emails, the script stops with a message and writes nothing.
+On Linux, add `--user "$(id -u):$(id -g)"` after `run --rm` in each `etl` command, so the load can write `data/interim/` (manual, section 14).
 
-To run the whole test suite against the running stack (the demo passwords are passed to the test container only, never to `web`):
+Open http://localhost:8000. Sign in as `demo@neighboar.local` (buyer) or `admin@neighboar.local` (administrator) with the passwords you set as `DEMO_BUYER_PASSWORD` and `DEMO_ADMIN_PASSWORD` in `.env`, or register an account. Turn on Demo mode at the bottom right to switch databases.
+
+Run every test against the running stack, straight after a load:
 
 ```bash
 set -a; . ./.env; set +a
 docker compose run --rm --no-deps -e NEIGHBOAR_URL=http://web:8000 -e PG_APP_RO_PASSWORD -e PG_OWNER_PASSWORD -e MONGO_ETL_PASSWORD -e DEMO_BUYER_PASSWORD -e DEMO_ADMIN_PASSWORD web python -m pytest -q -m "integration or not integration"
 ```
 
-Use named volumes so normal restarts retain local database data. `docker compose down` removes containers but retains named volumes. Only `docker compose down -v` deletes local database data.
+### Services
 
-Commit `compose.yaml`, the Dockerfile, `.env.example`, schema migrations, import scripts, and dependency lock files. Do not commit `.env`, database volumes, generated downloads, or passwords. Each teammate copies `.env.example` to `.env` and uses their own local development credentials. Docker recommends Compose for managing a multi-service application and supports health checks and named volumes for reliable startup and persistence. [Docker Compose quickstart](https://docs.docker.com/compose/gettingstarted/)
+```text
+postgres  PostgreSQL 18.6, named volume pgdata
+mongodb   MongoDB 8.3.11, single-node replica set, named volume mongodata
+migrate   one-off: replica set, roles and users, schema migrations, validators and indexes, then exits
+web       the app at http://localhost:8000 (bound to localhost only), after migrate succeeds
+etl       on demand (profile "tools"): checks the snapshot, cleans it, loads both databases
+bench     on demand (profile "tools"): the benchmark harness, run through bench/run.sh
+dbtools   on demand (profile "tools"): pg_dump, pg_restore, mongodump, mongorestore for the backup scripts
+```
+
+`docker compose down` keeps the data; only `docker compose down -v` deletes both databases.
 
 ### Backup and restore
 
-Two scripts copy both databases to a folder and put them back. Run them from the repository root in Git Bash on Windows or any POSIX shell, with the stack up. Docker must be on the host; nothing else is needed (no Python, no database client). Passwords come from `.env` through Compose and are never typed into a command, printed, or written to a backup.
-
 ```bash
-sh scripts/backup.sh --stop-web          # writes backups/<UTC timestamp>/
+sh scripts/backup.sh --stop-web                # writes backups/<UTC timestamp>/
 sh scripts/restore.sh backups/<UTC timestamp>
 ```
 
-- `backup.sh` refuses while `web` is running, because the app could write during the dump. `--stop-web` stops it and starts it again at the end. It refreshes the town figures, then writes `postgres.dump` (`pg_dump -Fc`), `mongo.archive.gz` (`mongodump --archive --gzip`) and `manifest.json`. The manifest holds the UTC time, the git commit, the SHA-256 of every `db/postgres/*.sql` file, the SHA-256 of each dump file, and a fingerprint of both databases (row counts and hashes, owners, grants, default privileges, function settings, constraints, triggers, MongoDB collection options and indexes).
-- `restore.sh` first checks, before changing anything, that each dump file still matches its checksum and that the `db/postgres/*.sql` files in your working tree are the ones the backup was taken with. If either check fails it stops and says which file differs. Then it asks you to type `yes` (or use `--yes`), stops `web`, runs the migrate step so roles and users exist, restores PostgreSQL (`pg_restore --clean --if-exists --single-transaction`, then `ANALYZE`) and MongoDB (`mongorestore --drop`), recomputes the fingerprint and compares it with the manifest. Any difference fails loudly and leaves `web` stopped. Only a clean match starts `web` again.
-- A restore replaces all data in both databases, including accounts and admin sales made since the backup.
-- Both tools run in the `dbtools` service (profile `tools`), built from `db/tools/Dockerfile`: the PostgreSQL 18.6 client tools plus MongoDB Database Tools 100.20.0, whose download is checked against a SHA-256 written in the Dockerfile. MongoDB publishes a Debian 12 build for x86_64 only, so on arm64 the image uses the Ubuntu 22.04 arm64 build. The service runs as your own user, so the files in `backups/` belong to you. The MongoDB password reaches the tools through a mode 600 file inside the container that is removed on any exit. PostgreSQL uses `PGPASSWORD` in the container environment.
-- `python -m db.state` prints the fingerprint; it runs in the `etl` service. `sh scripts/check_backup_roundtrip.sh` runs the whole round trip (back up, change both databases, restore, compare, and the two refusals) and deletes the backup folders it made; add `--keep` to keep them.
-- `backups/` is git-ignored and Docker-ignored. A backup is a full copy of the data, so do not share it or put it in a submission zip.
+A backup holds `postgres.dump`, `mongo.archive.gz` and a manifest with checksums of the dumps and the schema files and a fingerprint of both databases. `restore.sh` checks the checksums and the schema files before changing anything, asks you to type `yes`, restores both databases and compares the fingerprint, and leaves `web` stopped if anything differs. `sh scripts/check_backup_roundtrip.sh` runs the whole round trip as a self-test. `backups/` holds full copies including password hashes: it is git-ignored and must not be shared or zipped.
 
-## Suggested five-person split
+## Benchmark
 
-| Role | Main responsibility | Shared review responsibility |
-| --- | --- | --- |
-| 1. Data and quality | Source download, cleaning, town-code mapping, import reports, data dictionary | Review all schema assumptions and reproduce import from a clean environment |
-| 2. PostgreSQL | ER diagram, SQL migrations, constraints, indexes, views, SQL queries | Explain relational model and review equivalent MongoDB results |
-| 3. MongoDB | Document schema, import, indexes, aggregation pipelines, CRUD documents | Explain embedding decisions and review equivalent PostgreSQL results |
-| 4. Application integration | FastAPI routes, authentication, database-mode query services, error handling | Review API contracts and keep SQL/Mongo results comparable |
-| 5. Interface, testing, and evaluation | Browser UI, CRUD flows, test plan, performance harness, report evidence | Run acceptance tests and coordinate report, slides, and user manual evidence |
+`bench/` times the same questions in both databases on the full data, warm cache, 3 parameter sets of 50 runs each, after checking that both give the same results. It also measures throughput at 1, 4 and 8 clients, latency at 25, 50 and 100 per cent of the sales, and each index on and off with its query plans. `bench/README.md` is the procedure; `python -m bench.report` writes the results file from the run's own CSVs.
 
-Roles are ownership areas, not silos. Each owner should write a short walkthrough and pair with one teammate for review. Everyone should be able to explain both database designs before the presentation.
+The latest run, `bench/results/2026-11-rerun/` (one Linux laptop on mains power), covers 20 cases including the new pages' queries; its [RESULTS.md](bench/results/2026-11-rerun/RESULTS.md) has every table and chart. In short, MongoDB is lower for the block page (one embedded document), blocks near a block (`$geoNear` against Haversine over every block), filtered and price-sorted search (helped by an extra compound index PostgreSQL does not have), trends and rankings. PostgreSQL is lower for towns and blocks that fit, price check comparables, the exact median, the precomputed town figures and hawker centres per town. Household accept and leave, unfiltered search and search by flat type and month are within about 20 per cent of each other. The earlier run on Windows is in `bench/results/2026-11-full/`; compare numbers only within one run.
 
-## Collaboration rules
+## Repository
 
-- Create one GitHub Issue per concrete task. Assign one owner and describe acceptance criteria before coding.
-- Work in a short-lived branch named like `data/town-mapping` or `sql/initial-schema`.
-- Open a pull request into `main`; at least one teammate reviews it before merging. Keep commits focused and describe the tested behaviour in the pull request.
-- Never hand-edit a running database as the only way to change its schema or seed data. Use committed migrations and import scripts so every teammate can reproduce the same state.
-- Use a weekly 30-minute meeting: review completed work, blockers, upcoming tasks, and evidence needed for the report. Record only decisions and next actions in `PROJECT_PROGRESS.md`.
-- Keep raw official data out of ordinary commits. Use a documented download script and a small committed sample dataset for automated tests. Include the full data snapshot or retrieval instructions in the final source-code submission as required by the assignment.
+```text
+app/        FastAPI app: routers, services, templates, static files; repos/pg and repos/mongo implement the same interfaces
+db/         PostgreSQL migrations, MongoDB validators and indexes, migrate step, backup tools image
+etl/        snapshot check, cleaning, geocoding cache, loaders for both databases, synthetic buyers, import report
+tests/      unit, integration, equivalence and negative tests
+bench/      benchmark cases, harness, charts, report generator and results
+docs/       user manual, conventions, data dictionary, import report, integrity matrix, diagrams, build plan, references
+scripts/    backup, restore and their round-trip check
+data/       sample data and the geocoding cache (the full snapshot goes in data/raw/, not committed)
+```
 
-## Immediate team decisions
+Further reading: [`docs/conventions.md`](docs/conventions.md) (how a feature is built in both databases: repositories, DTOs, the database switch, timing, equivalence tests), [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md) (the original design and plan), [`docs/references.md`](docs/references.md) (libraries and sources).
 
-1. Create the shared GitHub repository and invite all members.
-2. Everyone installs Docker Desktop or Docker Engine with the Compose plugin, then confirms `docker compose version` works. Docker Desktop is Docker's recommended Compose installation path. [Docker Compose installation](https://docs.docker.com/compose/install/)
-3. Agree on the initial role owners and schedule a short walkthrough of this brief.
-4. Build the Compose skeleton before writing database-specific application code.
+## Working on it
+
+- One branch and one pull request per task into `main`; a teammate reviews before merging, and CI must pass.
+- Change schemas and seed data only through committed migrations and the ETL, never by hand in a running database, so everyone can rebuild the same state.
+- Keep `.env`, database volumes, the snapshot files and backups out of commits.
+- A new feature needs both databases, an equivalence test, and negative tests for any new integrity rule (`docs/conventions.md`).
