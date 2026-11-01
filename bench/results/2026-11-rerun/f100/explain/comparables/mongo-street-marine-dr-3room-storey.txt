@@ -1,0 +1,8 @@
+-- call 1
+find on resale_transactions: 0.0 ms
+winning plan:
+  SORT
+    PROJECTION_SIMPLE
+      FETCH
+        IXSCAN index=town_type_month
+executionStats: nReturned=6 keysExamined=150 docsExamined=150 time=0 ms

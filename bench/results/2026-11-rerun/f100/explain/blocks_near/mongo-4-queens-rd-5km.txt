@@ -1,0 +1,14 @@
+-- call 1
+find on building_profiles: 0.0 ms
+winning plan:
+  LIMIT
+    PROJECTION_SIMPLE
+      FETCH
+        IXSCAN index=_id_
+executionStats: nReturned=1 keysExamined=1 docsExamined=1 time=0 ms
+
+-- call 2
+aggregate on building_profiles: 5.0 ms
+stage $geoNearCursor: nReturned=921 estimate=3 ms
+stage $sort: nReturned=921 estimate=5 ms
+stage $project: nReturned=921 estimate=5 ms

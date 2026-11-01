@@ -1,0 +1,29 @@
+-- statement 1 (explained)
+WITH o AS (
+    SELECT building_id, latitude, longitude FROM building
+    WHERE building_id = %(building_id)s AND latitude IS NOT NULL
+)
+SELECT n.building_id, n.block, n.street, n.town, n.dist
+FROM o
+LEFT JOIN LATERAL (
+    SELECT b.building_id, b.block, b.street, tw.name AS town, d.dist
+    FROM building b
+    JOIN town tw ON tw.town_id = b.town_id
+    CROSS JOIN LATERAL (SELECT 2 * 6378100 * asin(sqrt(
+    sin((radians(b.latitude::double precision) - radians(o.latitude::double precision)) / 2) ^ 2
+    + cos(radians(o.latitude::double precision)) * cos(radians(b.latitude::double precision))
+      * sin((radians(b.longitude::double precision) - radians(o.longitude::double precision)) / 2) ^ 2)) AS dist) d
+    WHERE b.latitude IS NOT NULL AND b.building_id <> o.building_id AND b.residential IS NOT FALSE
+      AND d.dist <= %(radius)s
+) n ON true
+ORDER BY n.dist, n.building_id
+-- params: {"building_id": 8599, "radius": 5000}
+Sort (actual time=11.563..11.587 rows=921.0 loops=1) buffers: shared hit=147 read=0
+  -> Nested Loop (actual time=0.079..11.384 rows=921.0 loops=1) buffers: shared hit=147 read=0
+    -> Index Scan using building_pkey on building (actual time=0.004..0.005 rows=1.0 loops=1) buffers: shared hit=3 read=0
+    -> Hash Join (actual time=0.012..1.811 rows=10797.0 loops=1) buffers: shared hit=144 read=0
+      -> Seq Scan on building (actual time=0.003..0.85 rows=10797.0 loops=1) buffers: shared hit=143 read=0
+      -> Hash (actual time=0.006..0.007 rows=27.0 loops=1) buffers: shared hit=1 read=0
+        -> Seq Scan on town (actual time=0.001..0.003 rows=27.0 loops=1) buffers: shared hit=1 read=0
+Planning Time: 0.249 ms
+Execution Time: 11.626 ms

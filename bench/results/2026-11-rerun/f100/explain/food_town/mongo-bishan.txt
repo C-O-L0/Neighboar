@@ -1,0 +1,7 @@
+-- call 1
+aggregate on building_profiles: 328.0 ms
+stage $cursor: nReturned=238 estimate=1 ms
+stage $lookup: nReturned=238 estimate=136 ms
+stage $lookup: nReturned=238 estimate=328 ms
+stage $set: nReturned=238 estimate=328 ms
+stage $sort: nReturned=238 estimate=328 ms

@@ -1,0 +1,16 @@
+-- call 1
+count_documents on resale_transactions: 42.0 ms
+winning plan:
+  GROUP
+    GROUP
+      FETCH
+        IXSCAN index=type_price
+executionStats: nReturned=1 keysExamined=57319 docsExamined=57319 time=42 ms
+
+-- call 2
+find on resale_transactions: 52.0 ms
+winning plan:
+  SORT
+    FETCH
+      IXSCAN index=type_price
+executionStats: nReturned=50 keysExamined=57319 docsExamined=57319 time=52 ms

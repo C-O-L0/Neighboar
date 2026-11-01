@@ -1,0 +1,435 @@
+[
+  {
+    "n": 1,
+    "call": {
+      "kind": "find",
+      "collection": "resale_transactions",
+      "filter": {
+        "flat_type": "4 ROOM",
+        "txn_month": {
+          "$gte": "2024-10-01 00:00:00+00:00",
+          "$lte": "2026-09-01 00:00:00+00:00"
+        },
+        "building_id": 1583
+      },
+      "projection": {
+        "txn_month": 1,
+        "block": 1,
+        "street": 1,
+        "storey_min": 1,
+        "storey_max": 1,
+        "floor_area_sqm": 1,
+        "resale_price": 1,
+        "lease_commence_year": 1
+      },
+      "sort": [
+        [
+          "txn_month",
+          -1
+        ],
+        [
+          "_id",
+          -1
+        ]
+      ]
+    },
+    "explain": {
+      "explainVersion": "1",
+      "queryPlanner": {
+        "namespace": "neighboar.resale_transactions",
+        "parsedQuery": {
+          "$and": [
+            {
+              "building_id": {
+                "$eq": 1583
+              }
+            },
+            {
+              "flat_type": {
+                "$eq": "4 ROOM"
+              }
+            },
+            {
+              "txn_month": {
+                "$lte": "2026-09-01 00:00:00"
+              }
+            },
+            {
+              "txn_month": {
+                "$gte": "2024-10-01 00:00:00"
+              }
+            }
+          ]
+        },
+        "indexFilterSet": false,
+        "queryHash": "FDE84372",
+        "planCacheShapeHash": "FDE84372",
+        "planCacheKey": "666559F8",
+        "optimizationTimeMillis": 0,
+        "maxIndexedOrSolutionsReached": false,
+        "maxIndexedAndSolutionsReached": false,
+        "maxScansToExplodeReached": false,
+        "prunedSimilarIndexes": false,
+        "winningPlan": {
+          "isCached": true,
+          "stage": "SORT",
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "filter": {
+                "flat_type": {
+                  "$eq": "4 ROOM"
+                }
+              },
+              "nss": "neighboar.resale_transactions",
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "building_id": 1,
+                  "txn_month": -1
+                },
+                "indexName": "building_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "building_id": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "building_id": [
+                    "[1583, 1583]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1788220800000), new Date(1727740800000)]"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "rejectedPlans": [
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "building_id": {
+                    "$eq": 1583
+                  }
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "txn_month": 1
+                  },
+                  "indexName": "type_month",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "txn_month": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"4 ROOM\", \"4 ROOM\"]"
+                    ],
+                    "txn_month": [
+                      "[new Date(1727740800000), new Date(1788220800000)]"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "$and": [
+                    {
+                      "building_id": {
+                        "$eq": 1583
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$lte": "2026-09-01 00:00:00"
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$gte": "2024-10-01 00:00:00"
+                      }
+                    }
+                  ]
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "resale_price": 1,
+                    "_id": 1
+                  },
+                  "indexName": "type_price",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "resale_price": [],
+                    "_id": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"4 ROOM\", \"4 ROOM\"]"
+                    ],
+                    "resale_price": [
+                      "[MinKey, MaxKey]"
+                    ],
+                    "_id": [
+                      "[MinKey, MaxKey]"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "executionStats": {
+        "executionSuccess": true,
+        "nReturned": 5,
+        "executionTimeMillis": 0,
+        "totalKeysExamined": 18,
+        "totalDocsExamined": 18,
+        "executionStages": {
+          "isCached": true,
+          "stage": "SORT",
+          "nReturned": 5,
+          "executionTimeMillisEstimate": 0,
+          "works": 26,
+          "advanced": 5,
+          "needTime": 19,
+          "needYield": 0,
+          "saveState": 1,
+          "restoreState": 1,
+          "isEOF": 1,
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "totalDataSizeSorted": 1485,
+          "usedDisk": false,
+          "spills": 0,
+          "spilledRecords": 0,
+          "spilledBytes": 0,
+          "spilledDataStorageSize": 0,
+          "peakTrackedMemBytes": 1485,
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "nReturned": 5,
+            "executionTimeMillisEstimate": 0,
+            "works": 19,
+            "advanced": 5,
+            "needTime": 13,
+            "needYield": 0,
+            "saveState": 1,
+            "restoreState": 1,
+            "isEOF": 1,
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "filter": {
+                "flat_type": {
+                  "$eq": "4 ROOM"
+                }
+              },
+              "nReturned": 5,
+              "executionTimeMillisEstimate": 0,
+              "works": 19,
+              "advanced": 5,
+              "needTime": 13,
+              "needYield": 0,
+              "saveState": 1,
+              "restoreState": 1,
+              "isEOF": 1,
+              "nss": "neighboar.resale_transactions",
+              "docsExamined": 18,
+              "alreadyHasObj": 0,
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nReturned": 18,
+                "executionTimeMillisEstimate": 0,
+                "works": 19,
+                "advanced": 18,
+                "needTime": 0,
+                "needYield": 0,
+                "saveState": 1,
+                "restoreState": 1,
+                "isEOF": 1,
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "building_id": 1,
+                  "txn_month": -1
+                },
+                "indexName": "building_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "building_id": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "building_id": [
+                    "[1583, 1583]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1788220800000), new Date(1727740800000)]"
+                  ]
+                },
+                "keysExamined": 18,
+                "seeks": 1,
+                "dupsTested": 0,
+                "dupsDropped": 0,
+                "peakTrackedMemBytes": 0
+              }
+            }
+          }
+        }
+      },
+      "queryShapeHash": "E374F36CA62D39BB540AC12906DBB0FA0B0F73529A4FF40889E7CEE8B79AE601",
+      "command": {
+        "find": "resale_transactions",
+        "filter": {
+          "flat_type": "4 ROOM",
+          "txn_month": {
+            "$gte": "2024-10-01 00:00:00",
+            "$lte": "2026-09-01 00:00:00"
+          },
+          "building_id": 1583
+        },
+        "projection": {
+          "txn_month": 1,
+          "block": 1,
+          "street": 1,
+          "storey_min": 1,
+          "storey_max": 1,
+          "floor_area_sqm": 1,
+          "resale_price": 1,
+          "lease_commence_year": 1
+        },
+        "sort": {
+          "txn_month": -1,
+          "_id": -1
+        },
+        "$db": "neighboar"
+      },
+      "serverInfo": {
+        "host": "4d798ffc6d08",
+        "port": 27017,
+        "version": "8.3.11",
+        "gitVersion": "b8b83d6e6e1aed495578ad8c6f9234ad329c9955"
+      },
+      "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+      }
+    }
+  }
+]

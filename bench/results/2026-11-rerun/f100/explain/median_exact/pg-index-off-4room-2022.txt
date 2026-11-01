@@ -1,0 +1,12 @@
+-- statement 1 (explained)
+SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY t.resale_price)
+FROM resale_transaction t
+WHERE t.flat_type_id = (SELECT flat_type_id FROM flat_type WHERE name = %(flat_type)s)
+  AND t.txn_month >= %(start)s AND t.txn_month < %(end)s
+-- params: {"flat_type": "4 ROOM", "start": "2022-01-01", "end": "2023-01-01"}
+Aggregate (actual time=9.842..9.843 rows=1.0 loops=1) buffers: shared hit=2767 read=0
+  -> Seq Scan on flat_type (actual time=0.003..0.004 rows=1.0 loops=1) buffers: shared hit=1 read=0
+  -> Bitmap Heap Scan on resale_transaction (actual time=5.534..8.318 rows=11309.0 loops=1) buffers: shared hit=2767 read=0
+    -> Bitmap Index Scan using resale_transaction_type_price_idx (actual time=3.1..3.1 rows=102634.0 loops=1) buffers: shared hit=688 read=0
+Planning Time: 0.095 ms
+Execution Time: 9.856 ms

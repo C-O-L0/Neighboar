@@ -128,6 +128,7 @@ services:
       BENCH_DOCKER_MEM: ${BENCH_DOCKER_MEM:-}
       BENCH_MONGO_CACHE: ${BENCH_MONGO_CACHE:-}
       BENCH_MEM_LIMITS: ${BENCH_MEM_LIMITS:-}
+      BENCH_POWER: ${BENCH_POWER:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

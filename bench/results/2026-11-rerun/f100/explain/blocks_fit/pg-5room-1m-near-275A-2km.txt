@@ -1,0 +1,57 @@
+-- statement 1 (explained)
+WITH o AS (SELECT latitude, longitude FROM building WHERE building_id = %(place)s AND latitude IS NOT NULL),
+per_block AS (
+    SELECT t.building_id,
+           count(*)::int AS n,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.resale_price) AS median_price,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.storey_min + t.storey_max) AS storey_sum,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.floor_area_sqm) AS area_median
+    FROM resale_transaction t
+    
+    WHERE t.flat_type_id = %(flat_type_id)s AND t.txn_month >= %(start)s AND t.txn_month <= %(end)s
+    GROUP BY t.building_id
+),
+fits AS (
+    SELECT p.building_id, b.block, b.street, tw.name AS town, p.n, p.median_price, p.storey_sum,
+           p.area_median, b.lease_commence_year AS lease_year, 2 * 6378100 * asin(sqrt(
+    sin((radians(b.latitude::double precision) - radians(o.latitude::double precision)) / 2) ^ 2
+    + cos(radians(o.latitude::double precision)) * cos(radians(b.latitude::double precision))
+      * sin((radians(b.longitude::double precision) - radians(o.longitude::double precision)) / 2) ^ 2)) AS distance, b.latitude, b.longitude
+    FROM per_block p
+    JOIN building b ON b.building_id = p.building_id
+    JOIN town tw ON tw.town_id = b.town_id
+    CROSS JOIN o
+    WHERE p.median_price <= %(budget)s AND b.latitude IS NOT NULL AND 2 * 6378100 * asin(sqrt(
+    sin((radians(b.latitude::double precision) - radians(o.latitude::double precision)) / 2) ^ 2
+    + cos(radians(o.latitude::double precision)) * cos(radians(b.latitude::double precision))
+      * sin((radians(b.longitude::double precision) - radians(o.longitude::double precision)) / 2) ^ 2)) <= %(radius)s
+)
+SELECT c.total, r.building_id, r.block, r.street, r.town, r.n, r.median_price, r.storey_sum, r.area_median,
+       r.lease_year, r.distance, r.latitude, r.longitude
+FROM (SELECT count(*)::int AS total FROM fits) c
+LEFT JOIN LATERAL (
+    SELECT * FROM fits ORDER BY distance, building_id LIMIT %(limit)s OFFSET %(offset)s
+) r ON true
+ORDER BY r.distance, r.building_id
+-- params: {"flat_type_id": 5, "start": "2025-10-01", "end": "2026-09-01", "budget": "1000000", "limit": 20, "offset": 0, "place": 1583, "radius": 2000}
+Sort (actual time=10.142..10.145 rows=20.0 loops=1) buffers: shared hit=295 read=0
+  -> Hash Join (actual time=6.175..10.075 rows=74.0 loops=1) buffers: shared hit=295 read=0
+    -> Nested Loop (actual time=6.163..9.983 rows=74.0 loops=1) buffers: shared hit=294 read=0
+      -> Index Scan using building_pkey on building (actual time=0.005..0.007 rows=1.0 loops=1) buffers: shared hit=3 read=0
+      -> Hash Join (actual time=5.993..7.538 rows=2721.0 loops=1) buffers: shared hit=291 read=0
+        -> Seq Scan on building (actual time=0.002..0.825 rows=10797.0 loops=1) buffers: shared hit=143 read=0
+        -> Hash (actual time=5.988..5.988 rows=2721.0 loops=1) buffers: shared hit=148 read=0
+          -> Aggregate (actual time=1.165..5.732 rows=2721.0 loops=1) buffers: shared hit=148 read=0
+            -> Sort (actual time=1.152..1.326 rows=5707.0 loops=1) buffers: shared hit=148 read=0
+              -> Bitmap Heap Scan on resale_transaction (actual time=0.079..0.473 rows=5707.0 loops=1) buffers: shared hit=148 read=0
+                -> Bitmap Index Scan using resale_transaction_type_month_idx (actual time=0.067..0.067 rows=5707.0 loops=1) buffers: shared hit=8 read=0
+    -> Hash (actual time=0.008..0.008 rows=27.0 loops=1) buffers: shared hit=1 read=0
+      -> Seq Scan on town (actual time=0.003..0.004 rows=27.0 loops=1) buffers: shared hit=1 read=0
+  -> Nested Loop (actual time=10.132..10.136 rows=20.0 loops=1) buffers: shared hit=295 read=0
+    -> Aggregate (actual time=10.112..10.112 rows=1.0 loops=1) buffers: shared hit=295 read=0
+      -> CTE Scan (actual time=6.177..10.107 rows=74.0 loops=1) buffers: shared hit=295 read=0
+    -> Limit (actual time=0.019..0.02 rows=20.0 loops=1) buffers: shared hit=0 read=0
+      -> Sort (actual time=0.019..0.019 rows=20.0 loops=1) buffers: shared hit=0 read=0
+        -> CTE Scan (actual time=0.0..0.004 rows=74.0 loops=1) buffers: shared hit=0 read=0
+Planning Time: 0.362 ms
+Execution Time: 10.196 ms

@@ -1,0 +1,7 @@
+-- call 1
+aggregate on resale_transactions: 2.0 ms
+stage $cursor: nReturned=105 estimate=2 ms
+stage $match: nReturned=82 estimate=2 ms
+stage $project: nReturned=82 estimate=2 ms
+stage $match: nReturned=47 estimate=2 ms
+stage $facet: nReturned=1 estimate=2 ms

@@ -1,0 +1,53 @@
+-- statement 1 (explained)
+WITH 
+per_block AS (
+    SELECT t.building_id,
+           count(*)::int AS n,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.resale_price) AS median_price,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.storey_min + t.storey_max) AS storey_sum,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.floor_area_sqm) AS area_median
+    FROM resale_transaction t
+    JOIN building tb ON tb.building_id = t.building_id AND tb.town_id = %(town_id)s
+    WHERE t.flat_type_id = %(flat_type_id)s AND t.txn_month >= %(start)s AND t.txn_month <= %(end)s
+    GROUP BY t.building_id
+),
+fits AS (
+    SELECT p.building_id, b.block, b.street, tw.name AS town, p.n, p.median_price, p.storey_sum,
+           p.area_median, b.lease_commence_year AS lease_year, NULL::double precision AS distance, b.latitude, b.longitude
+    FROM per_block p
+    JOIN building b ON b.building_id = p.building_id
+    JOIN town tw ON tw.town_id = b.town_id
+    
+    WHERE p.median_price <= %(budget)s AND b.lease_commence_year >= %(min_lease_year)s
+)
+SELECT c.total, r.building_id, r.block, r.street, r.town, r.n, r.median_price, r.storey_sum, r.area_median,
+       r.lease_year, r.distance, r.latitude, r.longitude
+FROM (SELECT count(*)::int AS total FROM fits) c
+LEFT JOIN LATERAL (
+    SELECT * FROM fits ORDER BY median_price, building_id LIMIT %(limit)s OFFSET %(offset)s
+) r ON true
+ORDER BY r.median_price, r.building_id
+-- params: {"flat_type_id": 4, "start": "2025-10-01", "end": "2026-09-01", "budget": "800000", "limit": 20, "offset": 0, "town_id": 3, "min_lease_year": 1987}
+Sort (actual time=2.16..2.163 rows=20.0 loops=1) buffers: shared hit=395 read=0
+  -> Hash Join (actual time=1.383..2.116 rows=47.0 loops=1) buffers: shared hit=395 read=0
+    -> Hash Join (actual time=1.372..2.101 rows=47.0 loops=1) buffers: shared hit=394 read=0
+      -> Seq Scan on building (actual time=0.002..0.576 rows=6471.0 loops=1) buffers: shared hit=143 read=0
+      -> Hash (actual time=1.295..1.296 rows=66.0 loops=1) buffers: shared hit=251 read=0
+        -> Aggregate (actual time=1.134..1.289 rows=66.0 loops=1) buffers: shared hit=251 read=0
+          -> Sort (actual time=1.126..1.132 rows=186.0 loops=1) buffers: shared hit=251 read=0
+            -> Hash Join (actual time=0.23..1.107 rows=186.0 loops=1) buffers: shared hit=251 read=0
+              -> Bitmap Heap Scan on resale_transaction (actual time=0.173..0.638 rows=10652.0 loops=1) buffers: shared hit=242 read=0
+                -> Bitmap Index Scan using resale_transaction_type_month_idx (actual time=0.158..0.158 rows=10652.0 loops=1) buffers: shared hit=13 read=0
+              -> Hash (actual time=0.041..0.041 rows=291.0 loops=1) buffers: shared hit=9 read=0
+                -> Bitmap Heap Scan on building (actual time=0.009..0.025 rows=291.0 loops=1) buffers: shared hit=9 read=0
+                  -> Bitmap Index Scan using building_town_idx (actual time=0.006..0.006 rows=291.0 loops=1) buffers: shared hit=2 read=0
+    -> Hash (actual time=0.008..0.008 rows=27.0 loops=1) buffers: shared hit=1 read=0
+      -> Seq Scan on town (actual time=0.003..0.005 rows=27.0 loops=1) buffers: shared hit=1 read=0
+  -> Nested Loop (actual time=2.15..2.154 rows=20.0 loops=1) buffers: shared hit=395 read=0
+    -> Aggregate (actual time=2.136..2.136 rows=1.0 loops=1) buffers: shared hit=395 read=0
+      -> CTE Scan (actual time=1.384..2.133 rows=47.0 loops=1) buffers: shared hit=395 read=0
+    -> Limit (actual time=0.013..0.015 rows=20.0 loops=1) buffers: shared hit=0 read=0
+      -> Sort (actual time=0.013..0.014 rows=20.0 loops=1) buffers: shared hit=0 read=0
+        -> CTE Scan (actual time=0.0..0.002 rows=47.0 loops=1) buffers: shared hit=0 read=0
+Planning Time: 0.313 ms
+Execution Time: 2.2 ms

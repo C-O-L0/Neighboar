@@ -497,6 +497,7 @@ def run(args: argparse.Namespace, log: Callable[[str], None] = print) -> int:
                 "runs": args.runs,
                 "warmup": args.warmup,
                 "git_commit": os.environ.get("BENCH_GIT_COMMIT") or None,
+                "power": _json_env("BENCH_POWER"),  # per invocation: the power source can change during a run
                 "fraction": fraction,
                 "sale_counts": {"pg": counts["sale_all"]["pg"], "mongo": counts["sale_all"]["mongo"]},
                 "utc_start": started,

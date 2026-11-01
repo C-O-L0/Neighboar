@@ -1,0 +1,17 @@
+-- statement 1 (explained)
+SELECT m.month, m.n, m.median_price, m.avg_psm
+FROM mv_town_month_stats m
+JOIN town tw ON tw.town_id = m.town_id
+JOIN flat_type ft ON ft.flat_type_id = m.flat_type_id
+WHERE tw.name = %(town)s AND ft.name = %(flat_type)s
+ORDER BY m.month
+-- params: {"town": "BISHAN", "flat_type": "4 ROOM"}
+Sort (actual time=0.045..0.048 rows=117.0 loops=1) buffers: shared hit=7 read=0
+  -> Nested Loop (actual time=0.018..0.036 rows=117.0 loops=1) buffers: shared hit=7 read=0
+    -> Seq Scan on flat_type (actual time=0.004..0.004 rows=1.0 loops=1) buffers: shared hit=1 read=0
+    -> Nested Loop (actual time=0.013..0.025 rows=117.0 loops=1) buffers: shared hit=6 read=0
+      -> Seq Scan on town (actual time=0.002..0.003 rows=1.0 loops=1) buffers: shared hit=1 read=0
+      -> Bitmap Heap Scan on mv_town_month_stats (actual time=0.011..0.015 rows=117.0 loops=1) buffers: shared hit=5 read=0
+        -> Bitmap Index Scan using mv_town_month_stats_key (actual time=0.008..0.008 rows=117.0 loops=1) buffers: shared hit=3 read=0
+Planning Time: 0.127 ms
+Execution Time: 0.062 ms
