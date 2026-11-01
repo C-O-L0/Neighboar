@@ -1,6 +1,6 @@
-# Phase 2 conventions
+# Conventions
 
-Rules for every feature that the web app serves from either database. They come from task 2.1 (DB-mode switch and building page) and are what tasks 2.2 to 2.5 build on. Section numbers in brackets refer to `docs/BUILD_PLAN.md`.
+Rules for every feature that the web app serves from either database. They were set in task 2.1 (DB-mode switch and building page) and every later feature follows them; comments in the code cite them by section number. Section numbers in brackets refer to `docs/BUILD_PLAN.md`.
 
 ## 1. Layout (section 3)
 
@@ -57,13 +57,13 @@ User-facing routes use the `app_rw` pool and the MongoDB `app` user only (`app/d
 
 ## 9. Lookups for forms
 
-Town names, resale flat types and flat models come from the fixed lists in `etl/clean.py` (`TOWNS`, `FLAT_TYPES` with `is_resale_type`, `FLAT_MODELS`), the single definition both databases are loaded from (PROJECT_PROGRESS, 2026-10-20). Forms make no database call for lookups. Block and street input is normalised with `etl.clean.normalise_key`.
+Town names, resale flat types and flat models come from the fixed lists in `etl/clean.py` (`TOWNS`, `FLAT_TYPES` with `is_resale_type`, `FLAT_MODELS`), the single definition both databases are loaded from. Forms make no database call for lookups. Block and street input is normalised with `etl.clean.normalise_key`.
 
 ## 10. Equivalence tests
 
 Tests in `tests/equivalence/` are marked `pytest.mark.integration` and call both repos directly with `app_rw` and MongoDB `app` connections.
 
-- `tests/equivalence/cases.py` is the single registry of comparison cases. Each feature registers `Case(name, pg_call, mongo_call, params)`. The calls take (connection or database, params) and return DTOs; `params(conn)` returns the parameter dicts to run. The pytest files iterate over the registry, and Phase 4's `bench/verify.py` will iterate over the same registry on full data.
+- `tests/equivalence/cases.py` is the single registry of comparison cases. Each feature registers `Case(name, pg_call, mongo_call, params)`. The calls take (connection or database, params) and return DTOs; `params(conn)` returns the parameter dicts to run. The pytest files iterate over the registry, and `bench/verify.py` iterates over the same registry on the full data before every benchmark run.
 - Sampling rule: when the loaded data has at most 1,000 buildings (the sample), every case runs its full parameter list. Otherwise each feature's case list is the fixed full-data list it declares (buildings: every 25th building id in id order, plus the stub, 37 TEBAN GDNS RD and one zero-unit property block).
 - A session-scoped `settle` fixture in `tests/equivalence/conftest.py` connects as `app_admin` with `psycopg.connect(settings.pg_dsn("app_admin"), autocommit=True)`, as `etl/load_pg.py` does for its refresh, and calls `refresh_town_stats()` before any equivalence test runs (section 6, "settle step"). Every equivalence test depends on it.
 - `tests/equivalence/compare.py` provides `assert_equivalent(pg, mongo)`. It is recursive over dataclasses, lists (order matters), dicts and scalars. Values must be exactly equal, including `None` and every `Decimal`, except dataclass fields declared with `field(metadata={"tol": Decimal("0.01")})`, which may differ by at most 0.01. Only rounded aggregates where PostgreSQL rounds half away from zero and MongoDB `$round` rounds half to even carry that metadata (today `avg_psm`). Medians are exact observed prices and are never tolerant. A failure names the field path.

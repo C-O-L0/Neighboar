@@ -1,5 +1,7 @@
 # Neighboar Build Plan (v3, after two review rounds)
 
+> This is the plan written at the start of the project (October 2026), kept as a record of the design decisions. What was built differs in places: the pages were rebuilt for buyers (Rankings, Food by town and Health were retired), households were added (13 PostgreSQL tables, not 9), and `PROJECT_PROGRESS.md` is no longer in the repository. For the project as built, see the [README](../README.md), the [user manual](user_manual.md) and the [data dictionary](data_dictionary.md).
+
 Team 65, INF2003 Database Systems, Y2T1. Drafted Sun 18 Oct 2026. Final submission Sun 29 Nov 2026, 11:30 PM; target submit Fri 27 Nov.
 
 Scope is the submitted progress report. Items marked **[Q#]** depend on an open question at Gate 0 and show the recommended option.

@@ -42,9 +42,9 @@ Sales: 241,357 read, 241,357 accepted by cleaning, 0 rejected. Blocks: 13,357 in
 | snapshot sale | 241,357 | 241,357 | 241,357 | yes |
 | hawker_centre | 129 | 129 | 129 | yes |
 | buyer | n/a | 200 | 200 | yes |
-| saved_building | n/a | 1,002 | 1,002 | yes |
+| saved_building | n/a | 893 | 893 | yes |
 
-Counts were taken from the loaded databases at 2026-10-28T06:24:35+00:00 by `etl/db_counts.py`. Match compares only the pairs that exist: lookup tables are checked against cleaning in PostgreSQL (MongoDB embeds them), and sales and buyer figures with no cleaning counterpart are checked between the two databases.
+Counts were taken from the loaded databases at 2026-11-01T13:41:52+00:00 by `etl/db_counts.py`. Match compares only the pairs that exist: lookup tables are checked against cleaning in PostgreSQL (MongoDB embeds them), and sales and buyer figures with no cleaning counterpart are checked between the two databases.
 
 ## Rejected rows
 

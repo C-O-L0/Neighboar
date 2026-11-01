@@ -28,8 +28,8 @@ Memory: the two databases are capped at 1.5 GB each, and the full load needs a l
 ## 2. Clone the repository
 
 ```bash
-git clone https://github.com/C-O-L0/Neighboarhood.git neighboar
-cd neighboar
+git clone https://github.com/C-O-L0/Neighboar.git
+cd Neighboar
 ```
 
 If your team uses a different repository address, use that one. All later commands run inside this folder.
