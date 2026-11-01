@@ -1,0 +1,998 @@
+[
+  {
+    "n": 1,
+    "call": {
+      "kind": "aggregate",
+      "collection": "resale_transactions",
+      "pipeline": [
+        {
+          "$match": {
+            "flat_type": "4 ROOM",
+            "txn_month": {
+              "$gte": "2025-10-01 00:00:00+00:00",
+              "$lte": "2026-09-01 00:00:00+00:00"
+            }
+          }
+        },
+        {
+          "$group": {
+            "_id": "$building_id",
+            "block": {
+              "$first": "$block"
+            },
+            "street": {
+              "$first": "$street"
+            },
+            "town": {
+              "$first": "$town"
+            },
+            "lease_year": {
+              "$first": "$lease_commence_year"
+            },
+            "sales": {
+              "$push": {
+                "resale_price": "$resale_price",
+                "floor_area_sqm": "$floor_area_sqm",
+                "storey_sum": {
+                  "$add": [
+                    "$storey_min",
+                    "$storey_max"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "$project": {
+            "block": 1,
+            "street": 1,
+            "town": 1,
+            "lease_year": 1,
+            "n": {
+              "$size": "$sales"
+            },
+            "median_price": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "in": "$$this.resale_price"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": {
+                            "$multiply": [
+                              0.5,
+                              {
+                                "$size": "$sales"
+                              }
+                            ]
+                          }
+                        },
+                        1
+                      ]
+                    },
+                    0
+                  ]
+                }
+              ]
+            },
+            "storey_sum": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "in": "$$this.storey_sum"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": {
+                            "$multiply": [
+                              0.5,
+                              {
+                                "$size": "$sales"
+                              }
+                            ]
+                          }
+                        },
+                        1
+                      ]
+                    },
+                    0
+                  ]
+                }
+              ]
+            },
+            "area_median": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "in": "$$this.floor_area_sqm"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": {
+                            "$multiply": [
+                              0.5,
+                              {
+                                "$size": "$sales"
+                              }
+                            ]
+                          }
+                        },
+                        1
+                      ]
+                    },
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$match": {
+            "median_price": {
+              "$lte": "800000"
+            }
+          }
+        },
+        {
+          "$facet": {
+            "total": [
+              {
+                "$count": "n"
+              }
+            ],
+            "rows": [
+              {
+                "$sort": {
+                  "median_price": 1,
+                  "_id": 1
+                }
+              },
+              {
+                "$skip": 0
+              },
+              {
+                "$limit": 20
+              },
+              {
+                "$lookup": {
+                  "from": "building_profiles",
+                  "localField": "_id",
+                  "foreignField": "_id",
+                  "as": "building",
+                  "pipeline": [
+                    {
+                      "$project": {
+                        "location": 1
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$set": {
+                  "location": {
+                    "$first": "$building.location"
+                  }
+                }
+              },
+              {
+                "$unset": "building"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {}
+    },
+    "explain": {
+      "explainVersion": "2",
+      "stages": [
+        {
+          "$cursor": {
+            "queryPlanner": {
+              "namespace": "neighboar.resale_transactions",
+              "parsedQuery": {
+                "$and": [
+                  {
+                    "flat_type": {
+                      "$eq": "4 ROOM"
+                    }
+                  },
+                  {
+                    "txn_month": {
+                      "$lte": "2026-09-01 00:00:00"
+                    }
+                  },
+                  {
+                    "txn_month": {
+                      "$gte": "2025-10-01 00:00:00"
+                    }
+                  }
+                ]
+              },
+              "indexFilterSet": false,
+              "queryHash": "A209990B",
+              "planCacheShapeHash": "A209990B",
+              "planCacheKey": "C1F8589E",
+              "optimizationTimeMillis": 0,
+              "cursorType": "regular",
+              "maxIndexedOrSolutionsReached": false,
+              "maxIndexedAndSolutionsReached": false,
+              "maxScansToExplodeReached": false,
+              "prunedSimilarIndexes": false,
+              "winningPlan": {
+                "isCached": false,
+                "queryPlan": {
+                  "stage": "GROUP",
+                  "planNodeId": 4,
+                  "inputStage": {
+                    "stage": "FETCH",
+                    "planNodeId": 2,
+                    "nss": "neighboar.resale_transactions",
+                    "inputStage": {
+                      "stage": "IXSCAN",
+                      "planNodeId": 1,
+                      "nss": "neighboar.resale_transactions",
+                      "keyPattern": {
+                        "flat_type": 1,
+                        "txn_month": 1
+                      },
+                      "indexName": "type_month",
+                      "isMultiKey": false,
+                      "multiKeyPaths": {
+                        "flat_type": [],
+                        "txn_month": []
+                      },
+                      "isUnique": false,
+                      "isSparse": false,
+                      "isPartial": false,
+                      "indexVersion": 2,
+                      "direction": "forward",
+                      "indexBounds": {
+                        "flat_type": [
+                          "[\"4 ROOM\", \"4 ROOM\"]"
+                        ],
+                        "txn_month": [
+                          "[new Date(1759276800000), new Date(1788220800000)]"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "slotBasedPlan": {
+                  "slots": "$$RESULT=s28 env: { s5 = {\"flat_type\" : 1, \"txn_month\" : 1} }",
+                  "stages": "[4] project [s28 = newObj(\"_id\", s27, \"block\", s17, \"street\", s19, \"town\", s21, \"lease_year\", s23, \"sales\", s25)] \n[4] group [s27] [s17 = _internalFirst::accumulate(s17, s8), s19 = _internalFirst::accumulate(s19, s15), s21 = _internalFirst::accumulate(s21, s16), s23 = _internalFirst::accumulate(s23, s11), s25 = _internalPush::accumulate(s25, newObj(\"resale_price\", s12, \"floor_area_sqm\", s10, \"storey_sum\", \n    if ((typeMatch(s14, 1088) ?: true) || (typeMatch(s13, 1088) ?: true)) \n    then null \n    elif ((\n        if isNumber(s14) \n        then 0 \n        elif isDate(s14) \n        then 1 \n        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n    + \n        if isNumber(s13) \n        then 0 \n        elif isDate(s13) \n        then 1 \n        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n   ) > 1) \n    then fail(7157722, \"only one date allowed in an $add expression\") \n    else (s14 + s13) \n))] spillSlots[s18, s20, s22, s24, s26] mergingExprs[_internalFirst::merge(s18), _internalFirst::merge(s20), _internalFirst::merge(s22), _internalFirst::merge(s24), _internalPush::merge(s26)] \n[4] project [s27 = (s9 ?: null)] \n[2] fetch s1 = seek, s6 = result, s7 = recordId, s4 = inSnapshotId, s2 = inIndexIdent, s3 = inIndexKey, s5 = inIndexKeyPattern [s8 = block, s9 = building_id, s10 = floor_area_sqm, s11 = lease_commence_year, s12 = resale_price, s13 = storey_max, s14 = storey_min, s15 = street, s16 = town] @\"95916031-3787-400b-877e-1021b3d18ade\" \n[1] ixseek seekKeyLow = KS(3C3420524F4F4D0078800001999D11980001) seekKeyHigh = KS(3C3420524F4F4D0078800001A05A43FC00FE) [s3 = indexKey, s1 = recordId, s4 = snapshotId, s2 = indexIdent] [] @\"95916031-3787-400b-877e-1021b3d18ade\" @\"type_month\" forward "
+                }
+              },
+              "rejectedPlans": [
+                {
+                  "isCached": false,
+                  "stage": "PROJECTION_SIMPLE",
+                  "transformBy": {
+                    "block": 1,
+                    "building_id": 1,
+                    "floor_area_sqm": 1,
+                    "lease_commence_year": 1,
+                    "resale_price": 1,
+                    "storey_max": 1,
+                    "storey_min": 1,
+                    "street": 1,
+                    "town": 1,
+                    "_id": 0
+                  },
+                  "inputStage": {
+                    "stage": "FETCH",
+                    "filter": {
+                      "$and": [
+                        {
+                          "txn_month": {
+                            "$lte": "2026-09-01 00:00:00"
+                          }
+                        },
+                        {
+                          "txn_month": {
+                            "$gte": "2025-10-01 00:00:00"
+                          }
+                        }
+                      ]
+                    },
+                    "inputStage": {
+                      "stage": "IXSCAN",
+                      "keyPattern": {
+                        "flat_type": 1,
+                        "resale_price": 1,
+                        "_id": 1
+                      },
+                      "indexName": "type_price",
+                      "isMultiKey": false,
+                      "multiKeyPaths": {
+                        "flat_type": [],
+                        "resale_price": [],
+                        "_id": []
+                      },
+                      "isUnique": false,
+                      "isSparse": false,
+                      "isPartial": false,
+                      "indexVersion": 2,
+                      "direction": "forward",
+                      "indexBounds": {
+                        "flat_type": [
+                          "[\"4 ROOM\", \"4 ROOM\"]"
+                        ],
+                        "resale_price": [
+                          "[MinKey, MaxKey]"
+                        ],
+                        "_id": [
+                          "[MinKey, MaxKey]"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "executionStats": {
+              "executionSuccess": true,
+              "nReturned": 4672,
+              "executionTimeMillis": 29,
+              "totalKeysExamined": 10652,
+              "totalDocsExamined": 10652,
+              "executionStages": {
+                "stage": "project",
+                "planNodeId": 4,
+                "nReturned": 4672,
+                "executionTimeMillisEstimate": 9,
+                "opens": 1,
+                "closes": 1,
+                "saveState": 10,
+                "restoreState": 9,
+                "isEOF": 1,
+                "projections": {
+                  "28": "newObj(\"_id\", s27, \"block\", s17, \"street\", s19, \"town\", s21, \"lease_year\", s23, \"sales\", s25) "
+                },
+                "inputStage": {
+                  "stage": "group",
+                  "planNodeId": 4,
+                  "nReturned": 4672,
+                  "executionTimeMillisEstimate": 8,
+                  "opens": 1,
+                  "closes": 1,
+                  "saveState": 10,
+                  "restoreState": 9,
+                  "isEOF": 1,
+                  "groupBySlots": [
+                    27
+                  ],
+                  "expressions": {
+                    "17": "_internalFirst::accumulate(s17, s8) ",
+                    "19": "_internalFirst::accumulate(s19, s15) ",
+                    "21": "_internalFirst::accumulate(s21, s16) ",
+                    "23": "_internalFirst::accumulate(s23, s11) ",
+                    "25": "_internalPush::accumulate(s25, newObj(\"resale_price\", s12, \"floor_area_sqm\", s10, \"storey_sum\", \n    if ((typeMatch(s14, 1088) ?: true) || (typeMatch(s13, 1088) ?: true)) \n    then null \n    elif ((\n        if isNumber(s14) \n        then 0 \n        elif isDate(s14) \n        then 1 \n        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n    + \n        if isNumber(s13) \n        then 0 \n        elif isDate(s13) \n        then 1 \n        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n   ) > 1) \n    then fail(7157722, \"only one date allowed in an $add expression\") \n    else (s14 + s13) \n)) ",
+                    "initExprs": {
+                      "17": null,
+                      "19": null,
+                      "21": null,
+                      "23": null,
+                      "25": null,
+                      "mergingExprs": {
+                        "18": "_internalFirst::merge(s18) ",
+                        "20": "_internalFirst::merge(s20) ",
+                        "22": "_internalFirst::merge(s22) ",
+                        "24": "_internalFirst::merge(s24) ",
+                        "26": "_internalPush::merge(s26) "
+                      }
+                    }
+                  },
+                  "usedDisk": false,
+                  "spills": 0,
+                  "spilledBytes": 0,
+                  "spilledRecords": 0,
+                  "spilledDataStorageSize": 0,
+                  "peakTrackedMemBytes": 3397210,
+                  "inputStage": {
+                    "stage": "project",
+                    "planNodeId": 4,
+                    "nReturned": 10652,
+                    "executionTimeMillisEstimate": 0,
+                    "opens": 1,
+                    "closes": 1,
+                    "saveState": 10,
+                    "restoreState": 9,
+                    "isEOF": 1,
+                    "projections": {
+                      "27": "(s9 ?: null) "
+                    },
+                    "inputStage": {
+                      "stage": "fetch",
+                      "planNodeId": 2,
+                      "nReturned": 10652,
+                      "executionTimeMillisEstimate": 0,
+                      "opens": 1,
+                      "closes": 1,
+                      "saveState": 10,
+                      "restoreState": 9,
+                      "isEOF": 1,
+                      "numReads": 10652,
+                      "inputStage": {
+                        "stage": "ixseek",
+                        "planNodeId": 1,
+                        "nReturned": 10652,
+                        "executionTimeMillisEstimate": 0,
+                        "opens": 1,
+                        "closes": 1,
+                        "saveState": 10,
+                        "restoreState": 9,
+                        "isEOF": 1,
+                        "indexName": "type_month",
+                        "keysExamined": 10652,
+                        "seeks": 1,
+                        "numReads": 10653,
+                        "indexKeySlot": 3,
+                        "recordIdSlot": 1,
+                        "snapshotIdSlot": 4,
+                        "indexIdentSlot": 2,
+                        "outputSlots": [],
+                        "indexKeysToInclude": "00000000000000000000000000000000",
+                        "seekKeyLow": "KS(3C3420524F4F4D0078800001999D11980001) ",
+                        "seekKeyHigh": "KS(3C3420524F4F4D0078800001A05A43FC00FE) "
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "nReturned": 4672,
+          "executionTimeMillisEstimate": 25
+        },
+        {
+          "$project": {
+            "_id": true,
+            "block": true,
+            "street": true,
+            "town": true,
+            "lease_year": true,
+            "n": {
+              "$size": [
+                "$sales"
+              ]
+            },
+            "median_price": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "as": "this",
+                        "in": "$$this.resale_price"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": [
+                            {
+                              "$multiply": [
+                                {
+                                  "$const": 0.5
+                                },
+                                {
+                                  "$size": [
+                                    "$sales"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "$const": 1
+                        }
+                      ]
+                    },
+                    {
+                      "$const": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "storey_sum": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "as": "this",
+                        "in": "$$this.storey_sum"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": [
+                            {
+                              "$multiply": [
+                                {
+                                  "$const": 0.5
+                                },
+                                {
+                                  "$size": [
+                                    "$sales"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "$const": 1
+                        }
+                      ]
+                    },
+                    {
+                      "$const": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "area_median": {
+              "$arrayElemAt": [
+                {
+                  "$sortArray": {
+                    "input": {
+                      "$map": {
+                        "input": "$sales",
+                        "as": "this",
+                        "in": "$$this.floor_area_sqm"
+                      }
+                    },
+                    "sortBy": 1
+                  }
+                },
+                {
+                  "$max": [
+                    {
+                      "$subtract": [
+                        {
+                          "$ceil": [
+                            {
+                              "$multiply": [
+                                {
+                                  "$const": 0.5
+                                },
+                                {
+                                  "$size": [
+                                    "$sales"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "$const": 1
+                        }
+                      ]
+                    },
+                    {
+                      "$const": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "nReturned": 4672,
+          "executionTimeMillisEstimate": 25
+        },
+        {
+          "$match": {
+            "median_price": {
+              "$lte": "800000"
+            }
+          },
+          "nReturned": 4138,
+          "executionTimeMillisEstimate": 25
+        },
+        {
+          "$facet": {
+            "total": [
+              {
+                "$internalFacetTeeConsumer": {},
+                "nReturned": 4138,
+                "executionTimeMillisEstimate": 25
+              },
+              {
+                "$group": {
+                  "_id": {
+                    "$const": null
+                  },
+                  "n": {
+                    "$sum": {
+                      "$const": 1
+                    }
+                  },
+                  "$willBeMerged": false
+                },
+                "nReturned": 1,
+                "executionTimeMillisEstimate": 25,
+                "maxAccumulatorMemoryUsageBytes": {
+                  "n": 192
+                },
+                "totalOutputDataSizeBytes": 237,
+                "usedDisk": false,
+                "spills": 0,
+                "spilledDataStorageSize": 0,
+                "spilledBytes": 0,
+                "spilledRecords": 0,
+                "peakTrackedMemBytes": 208
+              },
+              {
+                "$project": {
+                  "n": true,
+                  "_id": false
+                },
+                "nReturned": 1,
+                "executionTimeMillisEstimate": 25
+              }
+            ],
+            "rows": [
+              {
+                "$internalFacetTeeConsumer": {},
+                "nReturned": 4138,
+                "executionTimeMillisEstimate": 0
+              },
+              {
+                "$sort": {
+                  "sortKey": {
+                    "median_price": 1,
+                    "_id": 1
+                  },
+                  "limit": 20
+                },
+                "totalDataSizeSortedBytesEstimate": 13959,
+                "usedDisk": false,
+                "spills": 0,
+                "spilledBytes": 0,
+                "spilledRecords": 0,
+                "spilledDataStorageSize": 0,
+                "nReturned": 20,
+                "executionTimeMillisEstimate": 4,
+                "peakTrackedMemBytes": 14288
+              },
+              {
+                "$lookup": {
+                  "from": "building_profiles",
+                  "as": "building",
+                  "localField": "_id",
+                  "foreignField": "_id",
+                  "let": {},
+                  "pipeline": [
+                    {
+                      "$project": {
+                        "location": 1
+                      }
+                    }
+                  ]
+                },
+                "nReturned": 20,
+                "executionTimeMillisEstimate": 5,
+                "totalDocsExamined": 20,
+                "totalKeysExamined": 20,
+                "collectionScans": 0,
+                "indexesUsed": [
+                  "_id_"
+                ]
+              },
+              {
+                "$set": {
+                  "location": {
+                    "$first": [
+                      "$building.location"
+                    ]
+                  }
+                },
+                "nReturned": 20,
+                "executionTimeMillisEstimate": 5
+              },
+              {
+                "$project": {
+                  "building": false,
+                  "_id": true
+                },
+                "nReturned": 20,
+                "executionTimeMillisEstimate": 5
+              }
+            ]
+          },
+          "nReturned": 1,
+          "executionTimeMillisEstimate": 30
+        }
+      ],
+      "queryShapeHash": "93F3603D4EB4CA25F1F3EE29E5AE2DA86011D2FC8F0295142340D9B1D3BF5E48",
+      "peakTrackedMemBytes": 3397210,
+      "serverInfo": {
+        "host": "4d798ffc6d08",
+        "port": 27017,
+        "version": "8.3.11",
+        "gitVersion": "b8b83d6e6e1aed495578ad8c6f9234ad329c9955"
+      },
+      "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+      },
+      "command": {
+        "aggregate": "resale_transactions",
+        "pipeline": [
+          {
+            "$match": {
+              "flat_type": "4 ROOM",
+              "txn_month": {
+                "$gte": "2025-10-01 00:00:00",
+                "$lte": "2026-09-01 00:00:00"
+              }
+            }
+          },
+          {
+            "$group": {
+              "_id": "$building_id",
+              "block": {
+                "$first": "$block"
+              },
+              "street": {
+                "$first": "$street"
+              },
+              "town": {
+                "$first": "$town"
+              },
+              "lease_year": {
+                "$first": "$lease_commence_year"
+              },
+              "sales": {
+                "$push": {
+                  "resale_price": "$resale_price",
+                  "floor_area_sqm": "$floor_area_sqm",
+                  "storey_sum": {
+                    "$add": [
+                      "$storey_min",
+                      "$storey_max"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "$project": {
+              "block": 1,
+              "street": 1,
+              "town": 1,
+              "lease_year": 1,
+              "n": {
+                "$size": "$sales"
+              },
+              "median_price": {
+                "$arrayElemAt": [
+                  {
+                    "$sortArray": {
+                      "input": {
+                        "$map": {
+                          "input": "$sales",
+                          "in": "$$this.resale_price"
+                        }
+                      },
+                      "sortBy": 1
+                    }
+                  },
+                  {
+                    "$max": [
+                      {
+                        "$subtract": [
+                          {
+                            "$ceil": {
+                              "$multiply": [
+                                0.5,
+                                {
+                                  "$size": "$sales"
+                                }
+                              ]
+                            }
+                          },
+                          1
+                        ]
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              "storey_sum": {
+                "$arrayElemAt": [
+                  {
+                    "$sortArray": {
+                      "input": {
+                        "$map": {
+                          "input": "$sales",
+                          "in": "$$this.storey_sum"
+                        }
+                      },
+                      "sortBy": 1
+                    }
+                  },
+                  {
+                    "$max": [
+                      {
+                        "$subtract": [
+                          {
+                            "$ceil": {
+                              "$multiply": [
+                                0.5,
+                                {
+                                  "$size": "$sales"
+                                }
+                              ]
+                            }
+                          },
+                          1
+                        ]
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              "area_median": {
+                "$arrayElemAt": [
+                  {
+                    "$sortArray": {
+                      "input": {
+                        "$map": {
+                          "input": "$sales",
+                          "in": "$$this.floor_area_sqm"
+                        }
+                      },
+                      "sortBy": 1
+                    }
+                  },
+                  {
+                    "$max": [
+                      {
+                        "$subtract": [
+                          {
+                            "$ceil": {
+                              "$multiply": [
+                                0.5,
+                                {
+                                  "$size": "$sales"
+                                }
+                              ]
+                            }
+                          },
+                          1
+                        ]
+                      },
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "$match": {
+              "median_price": {
+                "$lte": "800000"
+              }
+            }
+          },
+          {
+            "$facet": {
+              "total": [
+                {
+                  "$count": "n"
+                }
+              ],
+              "rows": [
+                {
+                  "$sort": {
+                    "median_price": 1,
+                    "_id": 1
+                  }
+                },
+                {
+                  "$skip": 0
+                },
+                {
+                  "$limit": 20
+                },
+                {
+                  "$lookup": {
+                    "from": "building_profiles",
+                    "localField": "_id",
+                    "foreignField": "_id",
+                    "as": "building",
+                    "pipeline": [
+                      {
+                        "$project": {
+                          "location": 1
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$set": {
+                    "location": {
+                      "$first": "$building.location"
+                    }
+                  }
+                },
+                {
+                  "$unset": "building"
+                }
+              ]
+            }
+          }
+        ],
+        "cursor": {},
+        "$db": "neighboar"
+      }
+    }
+  }
+]

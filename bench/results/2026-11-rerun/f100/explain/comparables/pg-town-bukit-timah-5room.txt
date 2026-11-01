@@ -1,0 +1,15 @@
+-- statement 1 (explained)
+SELECT t.txn_id, t.txn_month, b.block, b.street, t.storey_min, t.storey_max, t.floor_area_sqm, t.resale_price,
+       b.lease_commence_year
+FROM resale_transaction t
+JOIN building b ON b.building_id = t.building_id
+WHERE t.flat_type_id = %(flat_type_id)s AND t.txn_month >= %(start)s AND t.txn_month <= %(end)s
+  AND b.town_id = %(town_id)s
+ORDER BY t.txn_month DESC, t.txn_id DESC
+-- params: {"flat_type_id": 5, "start": "2024-10-01", "end": "2026-09-01", "building_id": 8599, "town_id": 7, "street": "QUEEN'S RD", "storey_min": null}
+Sort (actual time=0.122..0.123 rows=40.0 loops=1) buffers: shared hit=149 read=0
+  -> Nested Loop (actual time=0.026..0.111 rows=40.0 loops=1) buffers: shared hit=149 read=0
+    -> Index Scan using building_town_idx on building (actual time=0.006..0.011 rows=31.0 loops=1) buffers: shared hit=6 read=0
+    -> Index Scan using resale_transaction_building_month_idx on resale_transaction (actual time=0.003..0.003 rows=1.29 loops=31) buffers: shared hit=143 read=0
+Planning Time: 0.262 ms
+Execution Time: 0.139 ms

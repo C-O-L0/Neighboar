@@ -1,0 +1,46 @@
+-- statement 1 (recorded, not explained)
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY
+-- params: null
+
+-- statement 2 (explained)
+SELECT count(*) FROM v_transaction_detail WHERE flat_type_id = %s
+-- params: [5]
+Aggregate (actual time=25.39..25.392 rows=1.0 loops=1) buffers: shared hit=2193 read=0
+  -> Hash Join (actual time=2.244..23.656 rows=59042.0 loops=1) buffers: shared hit=2193 read=0
+    -> Nested Loop (actual time=2.236..19.257 rows=59042.0 loops=1) buffers: shared hit=2192 read=0
+      -> Seq Scan on flat_type (actual time=0.002..0.003 rows=1.0 loops=1) buffers: shared hit=1 read=0
+      -> Hash Join (actual time=2.233..16.866 rows=59042.0 loops=1) buffers: shared hit=2191 read=0
+        -> Hash Join (actual time=2.228..12.282 rows=59042.0 loops=1) buffers: shared hit=2190 read=0
+          -> Bitmap Heap Scan on resale_transaction (actual time=0.953..4.87 rows=59042.0 loops=1) buffers: shared hit=2047 read=0
+            -> Bitmap Index Scan using resale_transaction_type_month_idx (actual time=0.788..0.788 rows=59094.0 loops=1) buffers: shared hit=83 read=0
+          -> Hash (actual time=1.265..1.266 rows=13358.0 loops=1) buffers: shared hit=143 read=0
+            -> Seq Scan on building (actual time=0.002..0.55 rows=13358.0 loops=1) buffers: shared hit=143 read=0
+        -> Hash (actual time=0.004..0.004 rows=27.0 loops=1) buffers: shared hit=1 read=0
+          -> Seq Scan on town (actual time=0.001..0.002 rows=27.0 loops=1) buffers: shared hit=1 read=0
+    -> Hash (actual time=0.007..0.007 rows=21.0 loops=1) buffers: shared hit=1 read=0
+      -> Seq Scan on flat_model (actual time=0.004..0.004 rows=21.0 loops=1) buffers: shared hit=1 read=0
+Planning Time: 0.359 ms
+Execution Time: 25.416 ms
+
+-- statement 3 (explained)
+SELECT txn_id, txn_month, town, block, street, building_id, flat_type, flat_model, storey_min, storey_max, floor_area_sqm, lease_commence_year, remaining_lease_months, resale_price FROM v_transaction_detail WHERE flat_type_id = %s ORDER BY "resale_price" ASC, txn_id ASC LIMIT %s OFFSET %s
+-- params: [5, 50, 0]
+Limit (actual time=28.856..30.444 rows=50.0 loops=1) buffers: shared hit=2375 read=0
+  -> Gather Merge (actual time=28.854..30.44 rows=50.0 loops=1) buffers: shared hit=2375 read=0
+    -> Sort (actual time=27.166..27.169 rows=40.5 loops=2) buffers: shared hit=2375 read=0
+      -> Hash Join (actual time=3.322..20.037 rows=29521.0 loops=2) buffers: shared hit=2360 read=0
+        -> Nested Loop (actual time=3.282..17.242 rows=29521.0 loops=2) buffers: shared hit=2337 read=0
+          -> Hash Join (actual time=3.27..12.635 rows=29521.0 loops=2) buffers: shared hit=2335 read=0
+            -> Hash Join (actual time=3.253..9.908 rows=29521.0 loops=2) buffers: shared hit=2333 read=0
+              -> Bitmap Heap Scan on resale_transaction (actual time=0.686..3.217 rows=29521.0 loops=2) buffers: shared hit=2047 read=0
+                -> Bitmap Index Scan using resale_transaction_type_month_idx (actual time=1.163..1.163 rows=59094.0 loops=1) buffers: shared hit=83 read=0
+              -> Hash (actual time=2.537..2.537 rows=13358.0 loops=2) buffers: shared hit=286 read=0
+                -> Seq Scan on building (actual time=0.005..0.942 rows=13358.0 loops=2) buffers: shared hit=286 read=0
+            -> Hash (actual time=0.01..0.01 rows=27.0 loops=2) buffers: shared hit=2 read=0
+              -> Seq Scan on town (actual time=0.004..0.006 rows=27.0 loops=2) buffers: shared hit=2 read=0
+          -> Materialize (actual time=0.0..0.0 rows=1.0 loops=59042) buffers: shared hit=2 read=0
+            -> Seq Scan on flat_type (actual time=0.007..0.007 rows=1.0 loops=2) buffers: shared hit=2 read=0
+        -> Hash (actual time=0.034..0.034 rows=21.0 loops=2) buffers: shared hit=23 read=0
+          -> Seq Scan on flat_model (actual time=0.027..0.029 rows=21.0 loops=2) buffers: shared hit=23 read=0
+Planning Time: 0.431 ms
+Execution Time: 30.473 ms

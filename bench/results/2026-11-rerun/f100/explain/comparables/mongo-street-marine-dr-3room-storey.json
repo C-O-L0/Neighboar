@@ -1,0 +1,501 @@
+[
+  {
+    "n": 1,
+    "call": {
+      "kind": "find",
+      "collection": "resale_transactions",
+      "filter": {
+        "flat_type": "3 ROOM",
+        "txn_month": {
+          "$gte": "2024-10-01 00:00:00+00:00",
+          "$lte": "2026-09-01 00:00:00+00:00"
+        },
+        "town": "MARINE PARADE",
+        "street": "MARINE DR",
+        "storey_min": 7
+      },
+      "projection": {
+        "txn_month": 1,
+        "block": 1,
+        "street": 1,
+        "storey_min": 1,
+        "storey_max": 1,
+        "floor_area_sqm": 1,
+        "resale_price": 1,
+        "lease_commence_year": 1
+      },
+      "sort": [
+        [
+          "txn_month",
+          -1
+        ],
+        [
+          "_id",
+          -1
+        ]
+      ]
+    },
+    "explain": {
+      "explainVersion": "1",
+      "queryPlanner": {
+        "namespace": "neighboar.resale_transactions",
+        "parsedQuery": {
+          "$and": [
+            {
+              "flat_type": {
+                "$eq": "3 ROOM"
+              }
+            },
+            {
+              "storey_min": {
+                "$eq": 7
+              }
+            },
+            {
+              "street": {
+                "$eq": "MARINE DR"
+              }
+            },
+            {
+              "town": {
+                "$eq": "MARINE PARADE"
+              }
+            },
+            {
+              "txn_month": {
+                "$lte": "2026-09-01 00:00:00"
+              }
+            },
+            {
+              "txn_month": {
+                "$gte": "2024-10-01 00:00:00"
+              }
+            }
+          ]
+        },
+        "indexFilterSet": false,
+        "queryHash": "5DAB369C",
+        "planCacheShapeHash": "5DAB369C",
+        "planCacheKey": "EF2A2B77",
+        "optimizationTimeMillis": 0,
+        "maxIndexedOrSolutionsReached": false,
+        "maxIndexedAndSolutionsReached": false,
+        "maxScansToExplodeReached": false,
+        "prunedSimilarIndexes": false,
+        "winningPlan": {
+          "isCached": true,
+          "stage": "SORT",
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "filter": {
+                "$and": [
+                  {
+                    "storey_min": {
+                      "$eq": 7
+                    }
+                  },
+                  {
+                    "street": {
+                      "$eq": "MARINE DR"
+                    }
+                  }
+                ]
+              },
+              "nss": "neighboar.resale_transactions",
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "town": 1,
+                  "flat_type": 1,
+                  "txn_month": 1
+                },
+                "indexName": "town_type_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "town": [],
+                  "flat_type": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "town": [
+                    "[\"MARINE PARADE\", \"MARINE PARADE\"]"
+                  ],
+                  "flat_type": [
+                    "[\"3 ROOM\", \"3 ROOM\"]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1727740800000), new Date(1788220800000)]"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "rejectedPlans": [
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "$and": [
+                    {
+                      "storey_min": {
+                        "$eq": 7
+                      }
+                    },
+                    {
+                      "street": {
+                        "$eq": "MARINE DR"
+                      }
+                    },
+                    {
+                      "town": {
+                        "$eq": "MARINE PARADE"
+                      }
+                    }
+                  ]
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "txn_month": 1
+                  },
+                  "indexName": "type_month",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "txn_month": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"3 ROOM\", \"3 ROOM\"]"
+                    ],
+                    "txn_month": [
+                      "[new Date(1727740800000), new Date(1788220800000)]"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "$and": [
+                    {
+                      "storey_min": {
+                        "$eq": 7
+                      }
+                    },
+                    {
+                      "street": {
+                        "$eq": "MARINE DR"
+                      }
+                    },
+                    {
+                      "town": {
+                        "$eq": "MARINE PARADE"
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$lte": "2026-09-01 00:00:00"
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$gte": "2024-10-01 00:00:00"
+                      }
+                    }
+                  ]
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "resale_price": 1,
+                    "_id": 1
+                  },
+                  "indexName": "type_price",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "resale_price": [],
+                    "_id": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"3 ROOM\", \"3 ROOM\"]"
+                    ],
+                    "resale_price": [
+                      "[MinKey, MaxKey]"
+                    ],
+                    "_id": [
+                      "[MinKey, MaxKey]"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "executionStats": {
+        "executionSuccess": true,
+        "nReturned": 6,
+        "executionTimeMillis": 0,
+        "totalKeysExamined": 150,
+        "totalDocsExamined": 150,
+        "executionStages": {
+          "isCached": true,
+          "stage": "SORT",
+          "nReturned": 6,
+          "executionTimeMillisEstimate": 0,
+          "works": 159,
+          "advanced": 6,
+          "needTime": 151,
+          "needYield": 0,
+          "saveState": 1,
+          "restoreState": 1,
+          "isEOF": 1,
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "totalDataSizeSorted": 1752,
+          "usedDisk": false,
+          "spills": 0,
+          "spilledRecords": 0,
+          "spilledBytes": 0,
+          "spilledDataStorageSize": 0,
+          "peakTrackedMemBytes": 1752,
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "nReturned": 6,
+            "executionTimeMillisEstimate": 0,
+            "works": 151,
+            "advanced": 6,
+            "needTime": 144,
+            "needYield": 0,
+            "saveState": 1,
+            "restoreState": 1,
+            "isEOF": 1,
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "filter": {
+                "$and": [
+                  {
+                    "storey_min": {
+                      "$eq": 7
+                    }
+                  },
+                  {
+                    "street": {
+                      "$eq": "MARINE DR"
+                    }
+                  }
+                ]
+              },
+              "nReturned": 6,
+              "executionTimeMillisEstimate": 0,
+              "works": 151,
+              "advanced": 6,
+              "needTime": 144,
+              "needYield": 0,
+              "saveState": 1,
+              "restoreState": 1,
+              "isEOF": 1,
+              "nss": "neighboar.resale_transactions",
+              "docsExamined": 150,
+              "alreadyHasObj": 0,
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nReturned": 150,
+                "executionTimeMillisEstimate": 0,
+                "works": 151,
+                "advanced": 150,
+                "needTime": 0,
+                "needYield": 0,
+                "saveState": 1,
+                "restoreState": 1,
+                "isEOF": 1,
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "town": 1,
+                  "flat_type": 1,
+                  "txn_month": 1
+                },
+                "indexName": "town_type_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "town": [],
+                  "flat_type": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "town": [
+                    "[\"MARINE PARADE\", \"MARINE PARADE\"]"
+                  ],
+                  "flat_type": [
+                    "[\"3 ROOM\", \"3 ROOM\"]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1727740800000), new Date(1788220800000)]"
+                  ]
+                },
+                "keysExamined": 150,
+                "seeks": 1,
+                "dupsTested": 0,
+                "dupsDropped": 0,
+                "peakTrackedMemBytes": 0
+              }
+            }
+          }
+        }
+      },
+      "queryShapeHash": "475D1DE6E69CD28B40A6BC5B176C5FB223193DF08069B5D193C9B115A8933072",
+      "command": {
+        "find": "resale_transactions",
+        "filter": {
+          "flat_type": "3 ROOM",
+          "txn_month": {
+            "$gte": "2024-10-01 00:00:00",
+            "$lte": "2026-09-01 00:00:00"
+          },
+          "town": "MARINE PARADE",
+          "street": "MARINE DR",
+          "storey_min": 7
+        },
+        "projection": {
+          "txn_month": 1,
+          "block": 1,
+          "street": 1,
+          "storey_min": 1,
+          "storey_max": 1,
+          "floor_area_sqm": 1,
+          "resale_price": 1,
+          "lease_commence_year": 1
+        },
+        "sort": {
+          "txn_month": -1,
+          "_id": -1
+        },
+        "$db": "neighboar"
+      },
+      "serverInfo": {
+        "host": "4d798ffc6d08",
+        "port": 27017,
+        "version": "8.3.11",
+        "gitVersion": "b8b83d6e6e1aed495578ad8c6f9234ad329c9955"
+      },
+      "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+      }
+    }
+  }
+]

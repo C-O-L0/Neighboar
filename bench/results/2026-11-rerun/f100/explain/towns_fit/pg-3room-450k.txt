@@ -1,0 +1,29 @@
+-- statement 1 (explained)
+WITH per_town AS (
+    SELECT b.town_id,
+           count(*)::int AS n,
+           percentile_disc(0.5) WITHIN GROUP (ORDER BY t.resale_price) AS median_price,
+           (count(*) FILTER (WHERE t.resale_price <= %s))::int AS within_budget
+    FROM resale_transaction t
+    JOIN building b ON b.building_id = t.building_id
+    WHERE t.flat_type_id = %s AND t.txn_month >= %s AND t.txn_month <= %s
+    GROUP BY b.town_id
+)
+SELECT tw.name, p.n, p.median_price, p.within_budget
+FROM per_town p
+JOIN town tw ON tw.town_id = p.town_id
+ORDER BY p.median_price, tw.name COLLATE "C"
+-- params: ["450000", 3, "2025-10-01", "2026-09-01"]
+Sort (actual time=4.027..4.028 rows=26.0 loops=1) buffers: shared hit=297 read=0
+  -> Hash Join (actual time=2.93..4.018 rows=26.0 loops=1) buffers: shared hit=297 read=0
+    -> Aggregate (actual time=2.917..4.0 rows=26.0 loops=1) buffers: shared hit=296 read=0
+      -> Sort (actual time=2.826..2.975 rows=5704.0 loops=1) buffers: shared hit=296 read=0
+        -> Hash Join (actual time=1.539..2.381 rows=5704.0 loops=1) buffers: shared hit=296 read=0
+          -> Bitmap Heap Scan on resale_transaction (actual time=0.079..0.338 rows=5704.0 loops=1) buffers: shared hit=153 read=0
+            -> Bitmap Index Scan using resale_transaction_type_month_idx (actual time=0.066..0.066 rows=5704.0 loops=1) buffers: shared hit=8 read=0
+          -> Hash (actual time=1.44..1.44 rows=13358.0 loops=1) buffers: shared hit=143 read=0
+            -> Seq Scan on building (actual time=0.002..0.553 rows=13358.0 loops=1) buffers: shared hit=143 read=0
+    -> Hash (actual time=0.01..0.01 rows=27.0 loops=1) buffers: shared hit=1 read=0
+      -> Seq Scan on town (actual time=0.005..0.006 rows=27.0 loops=1) buffers: shared hit=1 read=0
+Planning Time: 0.343 ms
+Execution Time: 4.061 ms

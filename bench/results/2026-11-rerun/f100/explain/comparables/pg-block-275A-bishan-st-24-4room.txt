@@ -1,0 +1,16 @@
+-- statement 1 (explained)
+SELECT t.txn_id, t.txn_month, b.block, b.street, t.storey_min, t.storey_max, t.floor_area_sqm, t.resale_price,
+       b.lease_commence_year
+FROM resale_transaction t
+JOIN building b ON b.building_id = t.building_id
+WHERE t.flat_type_id = %(flat_type_id)s AND t.txn_month >= %(start)s AND t.txn_month <= %(end)s
+  AND t.building_id = %(building_id)s
+ORDER BY t.txn_month DESC, t.txn_id DESC
+-- params: {"flat_type_id": 4, "start": "2024-10-01", "end": "2026-09-01", "building_id": 1583, "town_id": 3, "street": "BISHAN ST 24", "storey_min": null}
+Sort (actual time=0.037..0.037 rows=5.0 loops=1) buffers: shared hit=12 read=0
+  -> Nested Loop (actual time=0.026..0.032 rows=5.0 loops=1) buffers: shared hit=12 read=0
+    -> Index Scan using building_pkey on building (actual time=0.01..0.01 rows=1.0 loops=1) buffers: shared hit=3 read=0
+    -> Bitmap Heap Scan on resale_transaction (actual time=0.015..0.02 rows=5.0 loops=1) buffers: shared hit=9 read=0
+      -> Bitmap Index Scan using resale_transaction_building_month_idx (actual time=0.008..0.008 rows=18.0 loops=1) buffers: shared hit=3 read=0
+Planning Time: 0.122 ms
+Execution Time: 0.054 ms

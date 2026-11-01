@@ -1,0 +1,435 @@
+[
+  {
+    "n": 1,
+    "call": {
+      "kind": "find",
+      "collection": "resale_transactions",
+      "filter": {
+        "flat_type": "5 ROOM",
+        "txn_month": {
+          "$gte": "2024-10-01 00:00:00+00:00",
+          "$lte": "2026-09-01 00:00:00+00:00"
+        },
+        "town": "BUKIT TIMAH"
+      },
+      "projection": {
+        "txn_month": 1,
+        "block": 1,
+        "street": 1,
+        "storey_min": 1,
+        "storey_max": 1,
+        "floor_area_sqm": 1,
+        "resale_price": 1,
+        "lease_commence_year": 1
+      },
+      "sort": [
+        [
+          "txn_month",
+          -1
+        ],
+        [
+          "_id",
+          -1
+        ]
+      ]
+    },
+    "explain": {
+      "explainVersion": "1",
+      "queryPlanner": {
+        "namespace": "neighboar.resale_transactions",
+        "parsedQuery": {
+          "$and": [
+            {
+              "flat_type": {
+                "$eq": "5 ROOM"
+              }
+            },
+            {
+              "town": {
+                "$eq": "BUKIT TIMAH"
+              }
+            },
+            {
+              "txn_month": {
+                "$lte": "2026-09-01 00:00:00"
+              }
+            },
+            {
+              "txn_month": {
+                "$gte": "2024-10-01 00:00:00"
+              }
+            }
+          ]
+        },
+        "indexFilterSet": false,
+        "queryHash": "327EB79C",
+        "planCacheShapeHash": "327EB79C",
+        "planCacheKey": "058BD8A5",
+        "optimizationTimeMillis": 0,
+        "maxIndexedOrSolutionsReached": false,
+        "maxIndexedAndSolutionsReached": false,
+        "maxScansToExplodeReached": false,
+        "prunedSimilarIndexes": false,
+        "winningPlan": {
+          "isCached": true,
+          "stage": "SORT",
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "nss": "neighboar.resale_transactions",
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "town": 1,
+                  "flat_type": 1,
+                  "txn_month": 1
+                },
+                "indexName": "town_type_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "town": [],
+                  "flat_type": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "town": [
+                    "[\"BUKIT TIMAH\", \"BUKIT TIMAH\"]"
+                  ],
+                  "flat_type": [
+                    "[\"5 ROOM\", \"5 ROOM\"]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1727740800000), new Date(1788220800000)]"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "rejectedPlans": [
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "town": {
+                    "$eq": "BUKIT TIMAH"
+                  }
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "txn_month": 1
+                  },
+                  "indexName": "type_month",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "txn_month": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"5 ROOM\", \"5 ROOM\"]"
+                    ],
+                    "txn_month": [
+                      "[new Date(1727740800000), new Date(1788220800000)]"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "isCached": false,
+            "stage": "SORT",
+            "sortPattern": {
+              "txn_month": -1,
+              "_id": -1
+            },
+            "memLimit": 104857600,
+            "type": "simple",
+            "inputStage": {
+              "stage": "PROJECTION_SIMPLE",
+              "transformBy": {
+                "txn_month": 1,
+                "block": 1,
+                "street": 1,
+                "storey_min": 1,
+                "storey_max": 1,
+                "floor_area_sqm": 1,
+                "resale_price": 1,
+                "lease_commence_year": 1
+              },
+              "inputStage": {
+                "stage": "FETCH",
+                "filter": {
+                  "$and": [
+                    {
+                      "town": {
+                        "$eq": "BUKIT TIMAH"
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$lte": "2026-09-01 00:00:00"
+                      }
+                    },
+                    {
+                      "txn_month": {
+                        "$gte": "2024-10-01 00:00:00"
+                      }
+                    }
+                  ]
+                },
+                "nss": "neighboar.resale_transactions",
+                "inputStage": {
+                  "stage": "IXSCAN",
+                  "nss": "neighboar.resale_transactions",
+                  "keyPattern": {
+                    "flat_type": 1,
+                    "resale_price": 1,
+                    "_id": 1
+                  },
+                  "indexName": "type_price",
+                  "isMultiKey": false,
+                  "multiKeyPaths": {
+                    "flat_type": [],
+                    "resale_price": [],
+                    "_id": []
+                  },
+                  "isUnique": false,
+                  "isSparse": false,
+                  "isPartial": false,
+                  "indexVersion": 2,
+                  "direction": "forward",
+                  "indexBounds": {
+                    "flat_type": [
+                      "[\"5 ROOM\", \"5 ROOM\"]"
+                    ],
+                    "resale_price": [
+                      "[MinKey, MaxKey]"
+                    ],
+                    "_id": [
+                      "[MinKey, MaxKey]"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "executionStats": {
+        "executionSuccess": true,
+        "nReturned": 40,
+        "executionTimeMillis": 0,
+        "totalKeysExamined": 40,
+        "totalDocsExamined": 40,
+        "executionStages": {
+          "isCached": true,
+          "stage": "SORT",
+          "nReturned": 40,
+          "executionTimeMillisEstimate": 0,
+          "works": 83,
+          "advanced": 40,
+          "needTime": 41,
+          "needYield": 0,
+          "saveState": 1,
+          "restoreState": 1,
+          "isEOF": 1,
+          "sortPattern": {
+            "txn_month": -1,
+            "_id": -1
+          },
+          "memLimit": 104857600,
+          "type": "simple",
+          "totalDataSizeSorted": 11666,
+          "usedDisk": false,
+          "spills": 0,
+          "spilledRecords": 0,
+          "spilledBytes": 0,
+          "spilledDataStorageSize": 0,
+          "peakTrackedMemBytes": 11666,
+          "inputStage": {
+            "stage": "PROJECTION_SIMPLE",
+            "nReturned": 40,
+            "executionTimeMillisEstimate": 0,
+            "works": 41,
+            "advanced": 40,
+            "needTime": 0,
+            "needYield": 0,
+            "saveState": 1,
+            "restoreState": 1,
+            "isEOF": 1,
+            "transformBy": {
+              "txn_month": 1,
+              "block": 1,
+              "street": 1,
+              "storey_min": 1,
+              "storey_max": 1,
+              "floor_area_sqm": 1,
+              "resale_price": 1,
+              "lease_commence_year": 1
+            },
+            "inputStage": {
+              "stage": "FETCH",
+              "nReturned": 40,
+              "executionTimeMillisEstimate": 0,
+              "works": 41,
+              "advanced": 40,
+              "needTime": 0,
+              "needYield": 0,
+              "saveState": 1,
+              "restoreState": 1,
+              "isEOF": 1,
+              "nss": "neighboar.resale_transactions",
+              "docsExamined": 40,
+              "alreadyHasObj": 0,
+              "inputStage": {
+                "stage": "IXSCAN",
+                "nReturned": 40,
+                "executionTimeMillisEstimate": 0,
+                "works": 41,
+                "advanced": 40,
+                "needTime": 0,
+                "needYield": 0,
+                "saveState": 1,
+                "restoreState": 1,
+                "isEOF": 1,
+                "nss": "neighboar.resale_transactions",
+                "keyPattern": {
+                  "town": 1,
+                  "flat_type": 1,
+                  "txn_month": 1
+                },
+                "indexName": "town_type_month",
+                "isMultiKey": false,
+                "multiKeyPaths": {
+                  "town": [],
+                  "flat_type": [],
+                  "txn_month": []
+                },
+                "isUnique": false,
+                "isSparse": false,
+                "isPartial": false,
+                "indexVersion": 2,
+                "direction": "forward",
+                "indexBounds": {
+                  "town": [
+                    "[\"BUKIT TIMAH\", \"BUKIT TIMAH\"]"
+                  ],
+                  "flat_type": [
+                    "[\"5 ROOM\", \"5 ROOM\"]"
+                  ],
+                  "txn_month": [
+                    "[new Date(1727740800000), new Date(1788220800000)]"
+                  ]
+                },
+                "keysExamined": 40,
+                "seeks": 1,
+                "dupsTested": 0,
+                "dupsDropped": 0,
+                "peakTrackedMemBytes": 0
+              }
+            }
+          }
+        }
+      },
+      "queryShapeHash": "1C6C8F87C51A98855DA5A75067BF9E801E527287185DDC9EBD88C9DB2623A93D",
+      "command": {
+        "find": "resale_transactions",
+        "filter": {
+          "flat_type": "5 ROOM",
+          "txn_month": {
+            "$gte": "2024-10-01 00:00:00",
+            "$lte": "2026-09-01 00:00:00"
+          },
+          "town": "BUKIT TIMAH"
+        },
+        "projection": {
+          "txn_month": 1,
+          "block": 1,
+          "street": 1,
+          "storey_min": 1,
+          "storey_max": 1,
+          "floor_area_sqm": 1,
+          "resale_price": 1,
+          "lease_commence_year": 1
+        },
+        "sort": {
+          "txn_month": -1,
+          "_id": -1
+        },
+        "$db": "neighboar"
+      },
+      "serverInfo": {
+        "host": "4d798ffc6d08",
+        "port": 27017,
+        "version": "8.3.11",
+        "gitVersion": "b8b83d6e6e1aed495578ad8c6f9234ad329c9955"
+      },
+      "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+      }
+    }
+  }
+]

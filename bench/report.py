@@ -282,16 +282,22 @@ def section_one(run: Run) -> list[str]:
 
 def power_line(run: Run) -> list[str]:
     """The power source and profile, when bench/run.sh recorded them, over every invocation of every fraction."""
-    powers = []
+    invocations = []
     for env_file in sorted(run.folder.glob("*/env.json")):
-        env = json.loads(env_file.read_text(encoding="utf-8"))
-        powers += [i["power"] for i in env["invocations"] if i.get("power")]
+        invocations += json.loads(env_file.read_text(encoding="utf-8"))["invocations"]
+    powers = [i["power"] for i in invocations if i.get("power")]
     if not powers:
         return []
     seen = list(dict.fromkeys((p["source"], p["profile"]) for p in powers))
     said = "; ".join(f"{source}, power profile `{profile}`" for source, profile in seen)
-    scope = "every invocation" if len(seen) == 1 else "the invocations, in that order of first appearance"
-    return [f"- Power: {said}, recorded by `bench/run.sh` for {scope} ({len(powers)} in all)."]
+    if len(powers) == len(invocations):
+        scope = "every invocation" if len(seen) == 1 else "the invocations, in order of first appearance"
+        return [f"- Power: {said}, recorded by `bench/run.sh` for {scope} ({len(powers)} in all)."]
+    missing = join_and(sorted({i["kind"] for i in invocations if not i.get("power")}))
+    return [
+        f"- Power: {said}, recorded by `bench/run.sh` for {len(powers)} of {len(invocations)} invocations; the "
+        f"{missing} invocation did not record it (the recording was added to `bench.explain` after this run)."
+    ]
 
 
 def conditions(run: Run, host: str) -> list[str]:
