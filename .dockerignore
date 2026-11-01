@@ -11,4 +11,10 @@ bench/results/**
 # /demo shows the latest run's charts and full-data summary (app/services/behind.py); the rest stays out.
 !bench/results/*/*.svg
 !bench/results/*/f100/summary.csv
+# bench.report reads these to rebuild RESULTS.md (tests/unit/test_bench_report.py); raw.jsonl and explain/ stay out
+!bench/results/*/*/env.json
+!bench/results/*/f100/throughput.csv
+!bench/results/*/f100/index_on_off.csv
+!bench/results/*/scaling.csv
+!bench/results/*/RESULTS.md
 backups/
