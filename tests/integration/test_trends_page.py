@@ -72,8 +72,8 @@ def test_trends_shows_table_labels_and_timings(db, name):
     page = main_of(resp)
     assert "Typical price" in page and "12-month typical price" in page and "<th>A year earlier</th>" in page
     assert 'href="/glossary#typical-price"' in page and "median*" not in page.lower()
-    assert re.search(r'<td class="nowrap">[A-Z][a-z]{2} \d{4}</td>', page)
-    assert re.search(r"<td>\$\d{1,3}(,\d{3})+</td>", page)
+    assert re.search(r'<td data-label="Month" class="nowrap">[A-Z][a-z]{2} \d{4}</td>', page)
+    assert re.search(r'<td data-label="Typical price">\$\d{1,3}(,\d{3})+</td>', page)
     assert re.search(r"-?\d+\.\d%", page)  # a YoY percentage
 
 

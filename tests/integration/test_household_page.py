@@ -169,3 +169,12 @@ def test_the_old_saved_page_redirects():
         assert resp.status_code == 308 and resp.headers["location"] == "/shortlist?db=mongo&notice=save_ok"
     finally:
         browser.close()
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_signed_in_menu_has_short_labels_for_phones(mode, make_user):  # noqa: F811
+    browser, _ = make_user(mode)
+    page = browser.http.get(f"/shortlist?db={mode}").text
+    for long, short in (("Find a home", "Find"), ("Check a price", "Price check"), ("Town trends", "Trends")):
+        label = f'<span class="label-long">{long}</span><span class="label-short" aria-hidden="true">{short}</span>'
+        assert label in page

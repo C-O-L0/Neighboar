@@ -30,7 +30,7 @@
   <div class="field">
     <label for="flat_type">{{ ui.term('Flat type', 'flat-type') }}</label>
     <select id="flat_type" name="flat_type">
-      <option value="">Choose a flat type</option>
+      <option value="">Choose</option>
       {% for t in flat_types %}<option value="{{ t }}"{% if f.flat_type == t %} selected{% endif %}>{{ t|flat_label }}</option>
       {% endfor %}
     </select>
@@ -73,12 +73,12 @@
 <details class="more">
   <summary>Show the monthly table ({{ points|length }} month{{ '' if points|length == 1 else 's' }} with sales)</summary>
   <div class="table-wrap">
-  <table class="trends">
+  <table class="stack trends">
     <caption>Monthly sales and typical price, {{ adj }} flats in {{ town }}. Months without sales are left out.</caption>
     <thead><tr><th>Month</th><th>Sales</th><th>Typical price</th><th>Average per sqm</th><th>A year earlier</th><th>Change</th><th>Change %</th><th>12-month sales</th><th>12-month typical price</th></tr></thead>
     <tbody>
       {% for p in points %}
-      <tr><td class="nowrap">{{ p.month|month }}</td><td>{{ p.n }}</td><td>{{ p.median_price|money }}</td><td>{{ p.avg_psm|per_sqm }}</td><td>{{ p.prev_year_median|money if p.prev_year_median is not none else 'No sales' }}</td><td>{{ p.yoy_change|money if p.yoy_change is not none else '' }}</td><td>{{ p.yoy_pct|pct }}</td><td>{{ p.rolling_n }}</td><td>{{ p.rolling_median|money }}</td></tr>
+      <tr><td data-label="Month" class="nowrap">{{ p.month|month }}</td><td data-label="Sales">{{ p.n }}</td><td data-label="Typical price">{{ p.median_price|money }}</td><td data-label="Average per sqm">{{ p.avg_psm|per_sqm }}</td><td data-label="A year earlier">{{ p.prev_year_median|money if p.prev_year_median is not none else 'No sales' }}</td><td data-label="Change">{{ p.yoy_change|money if p.yoy_change is not none else '' }}</td><td data-label="Change %">{{ p.yoy_pct|pct }}</td><td data-label="12-month sales">{{ p.rolling_n }}</td><td data-label="12-month typical price">{{ p.rolling_median|money }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

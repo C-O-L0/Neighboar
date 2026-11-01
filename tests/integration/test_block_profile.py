@@ -174,7 +174,7 @@ def test_the_lease_check_links_to_the_official_cpf_page(ids):
 @pytest.mark.parametrize("db", MODES)
 def test_recent_prices_have_tags_against_the_town(ids, db):
     page = main_of(get(f"/block/{ids['recent']}?db={db}"))
-    table = page.split('<table class="recent">')[1].split("</table>")[0]
+    table = page.split('<table class="stack recent">')[1].split("</table>")[0]
     assert "<th>Against " in table and "Typical price" in table
     assert re.search(r'<span class="tags">|Too few town sales to compare', table)
 

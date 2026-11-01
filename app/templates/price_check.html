@@ -105,12 +105,12 @@
     <span class="hint">{% if result.verdict.n > result.sales|length %}the latest {{ result.sales|length }} of {{ result.verdict.n }}{% else %}latest first{% endif %}</span>
   </div>
   <div class="table-wrap">
-  <table class="comparables">
+  <table class="stack comparables">
     <caption class="sr">Comparable sales, latest first</caption>
     <thead><tr><th>Month</th>{% if result.level != 'block' %}<th>Block</th>{% endif %}<th>Storey</th><th>Area (sqm)</th><th>Price</th><th>Per sqm</th></tr></thead>
     <tbody>
       {% for s in result.sales %}
-      <tr><td class="nowrap">{{ s.txn_month|month }}</td>{% if result.level != 'block' %}<td class="nowrap">{{ s.block }} {{ s.street|proper }}</td>{% endif %}<td class="nowrap">{{ s.storey_min|storey(s.storey_max) }}</td><td>{{ s.floor_area_sqm }}</td><td>{{ s.resale_price|money }}</td><td>{{ s.price_psm|per_sqm }}</td></tr>
+      <tr><td data-label="Month" class="nowrap">{{ s.txn_month|month }}</td>{% if result.level != 'block' %}<td data-label="Block" class="nowrap">{{ s.block }} {{ s.street|proper }}</td>{% endif %}<td data-label="Storey" class="nowrap">{{ s.storey_min|storey(s.storey_max) }}</td><td data-label="Area (sqm)">{{ s.floor_area_sqm }}</td><td data-label="Price">{{ s.resale_price|money }}</td><td data-label="Per sqm">{{ s.price_psm|per_sqm }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -72,12 +72,12 @@
 <p class="count">{{ result.total }} sale{{ '' if result.total == 1 else 's' }}, page {{ result.page }} of {{ result.pages }}</p>
 {% if result.rows %}
 <div class="table-wrap">
-<table class="sales">
+<table class="stack sales">
   <caption>Resale sales matching the search</caption>
   <thead><tr><th>Month</th><th>Town</th><th>Block</th><th>Street</th><th>Flat type</th><th>Model</th><th>Storey</th><th>Area (sqm)</th><th>Lease start</th><th>Remaining lease</th><th>Price</th><th>Price per sqm</th></tr></thead>
   <tbody>
     {% for r in result.rows %}
-    <tr><td class="nowrap">{{ r.txn_month|month }}</td><td>{{ r.town|proper }}</td><td>{{ r.block }}</td><td class="nowrap"><a href="/block/{{ r.building_id }}">{{ r.street|proper }}</a></td><td class="nowrap">{{ r.flat_type|flat_label }}</td><td>{{ r.flat_model }}</td><td class="nowrap">{{ r.storey_min|storey(r.storey_max) }}</td><td>{{ r.floor_area_sqm }}</td><td>{{ r.lease_commence_year|unknown }}</td><td class="nowrap">{{ r.remaining_lease_months|lease }}</td><td class="nowrap">{{ r.resale_price|money }}</td><td class="nowrap">{{ r.price_psm|per_sqm }}</td></tr>
+    <tr><td data-label="Month" class="nowrap">{{ r.txn_month|month }}</td><td data-label="Town">{{ r.town|proper }}</td><td data-label="Block">{{ r.block }}</td><td data-label="Street" class="nowrap"><a href="/block/{{ r.building_id }}">{{ r.street|proper }}</a></td><td data-label="Flat type" class="nowrap">{{ r.flat_type|flat_label }}</td><td data-label="Model">{{ r.flat_model }}</td><td data-label="Storey" class="nowrap">{{ r.storey_min|storey(r.storey_max) }}</td><td data-label="Area (sqm)">{{ r.floor_area_sqm }}</td><td data-label="Lease start">{{ r.lease_commence_year|unknown }}</td><td data-label="Remaining lease" class="nowrap">{{ r.remaining_lease_months|lease }}</td><td data-label="Price" class="nowrap">{{ r.resale_price|money }}</td><td data-label="Price per sqm" class="nowrap">{{ r.price_psm|per_sqm }}</td></tr>
     {% endfor %}
   </tbody>
 </table>

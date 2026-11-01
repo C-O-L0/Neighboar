@@ -87,6 +87,7 @@ def test_without_demo_mode_there_is_no_switch_and_no_timing(building_path):
 def test_current_menu_item_is_marked():
     assert re.search(r'<a href="/search" aria-current="page">Advanced search</a>', get("/search").text)
     assert re.search(r'<a href="/" aria-current="page">Find a home</a>', get("/").text)
+    assert re.search(r'<a href="/" aria-current="page">Find a home</a>', get(EXPLORE).text)  # results of the same task
     assert 'aria-current="page"' not in get("/glossary").text
 
 
@@ -101,7 +102,7 @@ def test_trends_chart_json_covers_every_month_with_null_for_gaps(db, gap_query):
     resp = get(f"{gap_query}&db={db}")
     data = json.loads(chart_json(resp, "trends-data"))
     assert set(data) == {"months", "median", "rolling_median", "n"}
-    rows = re.findall(r'<tr><td class="nowrap">([A-Z][a-z]{2} \d{4})</td>', resp.text)
+    rows = re.findall(r'<tr><td data-label="Month" class="nowrap">([A-Z][a-z]{2} \d{4})</td>', resp.text)
     first, last = rows[0], rows[-1]
     names = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
     index = {m: i for i, m in enumerate(names)}
@@ -162,16 +163,20 @@ def test_accessibility_labels_captions_and_canvas(db, building_path, gap_query):
         assert scan.problems == [], path
 
 
+STACK = re.compile(r'<table class="stack [\w-]+">(.*?)</table>', re.S)
+
+
 @pytest.mark.parametrize("db", ["pg", "mongo"])
-def test_wide_tables_are_wrapped_for_scrolling(db, building_path, gap_query):
-    for path, css in (
-        ("/search?town=BISHAN", "sales"),
-        (gap_query, "trends"),
-        (building_path, "sales"),
-    ):
+def test_wide_tables_become_labelled_cards_on_phones(db, building_path, gap_query):
+    """Each wide table is wrapped, and every cell names its column, which phones show above the value."""
+    for path in ("/search?town=BISHAN", gap_query, building_path, PRICE_CHECK, "/demo"):
         text = get(f"{path}{'&' if '?' in path else '?'}db={db}").text
-        wrapped = re.findall(rf'<div class="table-wrap">\s*<table class="{css}">.*?</table>\s*</div>', text, re.S)
-        assert len(wrapped) == text.count(f'<table class="{css}">') >= 1, path
+        tables = STACK.findall(text)
+        assert tables and len(tables) == len(re.findall(r'<div class="table-wrap">\s*<table class="stack ', text)), path
+        for table in tables:
+            heads = [re.sub(r"<[^>]+>", "", h).replace("?", "").strip() for h in re.findall(r"<th>(.*?)</th>", table)]
+            for row in re.findall(r"<tr>(<td.*?)</tr>", table, re.S):
+                assert re.findall(r'<td data-label="([^"]*)"', row) == heads, (path, row[:120])
 
 
 @pytest.mark.parametrize("db", ["pg", "mongo"])
@@ -196,3 +201,15 @@ def test_footer_shows_the_latest_registration_month(db, pg_rw, building_path):
     for path in ("/", "/glossary", building_path):
         assert label in get(f"{path}?db={db}").text, path
     assert "Sales registered up to" not in get("/api/health").text
+
+
+@pytest.mark.parametrize("path", ["/nope", "/block/1/extra"])
+def test_unknown_addresses_get_a_page_not_json(path):
+    resp = get(path)
+    assert resp.status_code == 404 and resp.headers["content-type"].startswith("text/html")
+    assert "<h1>Page not found</h1>" in resp.text and 'class="topbar"' in resp.text
+
+
+def test_the_api_keeps_json_errors():
+    resp = get("/api/nope")
+    assert resp.status_code == 404 and resp.json() == {"detail": "Not Found"}
