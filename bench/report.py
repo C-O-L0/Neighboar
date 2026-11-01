@@ -556,7 +556,7 @@ def index_on_off(run: Run) -> list[str]:
         "",
         "Without the `(flat_type, month)` index both databases fall back to the neighbouring price index where the "
         "plan still uses an index (`resale_transaction_type_price_idx` in PostgreSQL, `type_price` in MongoDB), as "
-        "recorded in PROJECT_PROGRESS 4.1b; the rows above show which parameter sets did so. For `search_price_sort` "
+        "the rows above show for each parameter set. For `search_price_sort` "
         "the dropped index is the price index and the fallback is the month index.",
         "",
         f"Reading of the latencies: {'; '.join(slower)}.",
