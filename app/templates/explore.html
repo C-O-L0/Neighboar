@@ -141,8 +141,8 @@
         <a href="/block/{{ b.building_id }}">{{ b.block }} {{ b.street|proper }}</a>
         <span class="hint">
           {{ b.town|proper }} · {{ b.n }} sale{{ '' if b.n == 1 else 's' }}{{ ui.few(b.n, few_sales) }}
-          {% if row.lease_left is not none %} · about {{ row.lease_left }} years lease left{% endif %}
-          {% if place and b.building_id == place.building_id %} · your chosen block{% elif b.distance_m is not none %} · {{ b.distance_m|distance }} away{% endif %}
+          {% if row.lease_left is not none %} · <span class="nowrap">about {{ row.lease_left }} years lease left</span>{% endif %}
+          {% if place and b.building_id == place.building_id %} · your chosen block{% elif b.distance_m is not none %} · <span class="nowrap">{{ b.distance_m|distance }} away</span>{% endif %}
         </span>
       </div>
       {{ ui.tag_list(row.tags, b.town|proper) }}

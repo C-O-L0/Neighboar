@@ -387,7 +387,7 @@ table.details th { width: 40%; color: var(--muted); font-weight: 600; }
 .searchform select, .searchform input:not([type="hidden"]) { width: 100%; min-width: 0; }
 
 /* Behind the scenes */
-.health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 16px; }
+.health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 16px; }
 .health-card { margin: 0; }
 .health-name { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 18px; }
 .health-list { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
