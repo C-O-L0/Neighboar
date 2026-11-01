@@ -97,7 +97,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <button type="submit">Refresh town figures</button>
 </form>
-<p class="footnote">Refreshes the town-month materialised view for the trends and rankings pages.</p>
+<p class="footnote">Refreshes the town-month materialised view behind the town trends page.</p>
 {% else %}
 <form method="post" action="/admin/rebuild-stats?db={{ db_mode }}" class="inline">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -112,23 +112,23 @@
 <p>No admin-recorded sales yet.</p>
 {% else %}
 <div class="table-wrap">
-<table class="admin-sales">
+<table class="stack admin-sales">
   <caption>The latest {{ sales|length }} admin-recorded sale{{ '' if sales|length == 1 else 's' }}, newest first (at most {{ list_limit }})</caption>
   <thead><tr><th>Id</th><th>Month</th><th>Block</th><th>Town</th><th>Flat type</th><th>Model</th><th>Storey</th><th>Area (sqm)</th><th>Remaining lease</th><th>Price</th><th>Delete</th></tr></thead>
   <tbody>
     {% for s in sales %}
     <tr>
-      <td>{{ s.txn_id }}</td>
-      <td class="nowrap">{{ s.txn_month|month }}</td>
-      <td class="nowrap"><a href="/block/{{ s.building_id }}?db={{ db_mode }}">{{ s.block }} {{ s.street|proper }}</a></td>
-      <td>{{ s.town|proper }}</td>
-      <td class="nowrap">{{ s.flat_type|flat_label }}</td>
-      <td>{{ s.flat_model }}</td>
-      <td class="nowrap">{{ s.storey_min|storey(s.storey_max) }}</td>
-      <td>{{ s.floor_area_sqm }}</td>
-      <td>{{ s.remaining_lease_months|lease }}</td>
-      <td>{{ s.resale_price|money }}</td>
-      <td>
+      <td data-label="Id">{{ s.txn_id }}</td>
+      <td data-label="Month" class="nowrap">{{ s.txn_month|month }}</td>
+      <td data-label="Block" class="nowrap"><a href="/block/{{ s.building_id }}?db={{ db_mode }}">{{ s.block }} {{ s.street|proper }}</a></td>
+      <td data-label="Town">{{ s.town|proper }}</td>
+      <td data-label="Flat type" class="nowrap">{{ s.flat_type|flat_label }}</td>
+      <td data-label="Model">{{ s.flat_model }}</td>
+      <td data-label="Storey" class="nowrap">{{ s.storey_min|storey(s.storey_max) }}</td>
+      <td data-label="Area (sqm)">{{ s.floor_area_sqm }}</td>
+      <td data-label="Remaining lease">{{ s.remaining_lease_months|lease }}</td>
+      <td data-label="Price">{{ s.resale_price|money }}</td>
+      <td data-label="">
         <form method="post" action="/admin/sales/delete?db={{ db_mode }}" class="inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="txn_id" value="{{ s.txn_id }}">

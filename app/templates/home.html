@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Find a resale flat · Neighboar{% endblock %}
 {% block content %}
+<header class="home-head">
+  <h1>Find a resale flat that fits</h1>
+  <p class="lede">Tell us what you need. We compare it with real HDB resale sales{% if data_month %} registered up to {{ data_month|month }}{% endif %}.</p>
+</header>
 <div class="home">
-  <section class="home-main">
-    <h1>Find a resale flat that fits</h1>
-    <p class="lede">Tell us what you need. We compare it with real HDB resale sales{% if data_month %} registered up to {{ data_month|month }}{% endif %}.</p>
+  <section class="home-main" aria-label="Guided start">
     {% if errors %}
     <div class="bad" role="alert">
       <p>Please correct the following.</p>

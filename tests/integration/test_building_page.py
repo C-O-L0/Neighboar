@@ -117,7 +117,7 @@ def test_demo_bar_has_one_timing_line_per_repo_call_naming_the_database(ids, db,
     page = get(f"/block/{ids['normal']}?db={db}").text
     timings = TIMING.findall(page)
     assert timings[:3] == [("block profile", name), ("food access", name), ("recent prices", name)]
-    rows = len(re.findall(r"<tr><td", page.split('<table class="recent">')[1].split("</table>")[0]))
+    rows = len(re.findall(r"<tr><td", page.split('<table class="stack recent">')[1].split("</table>")[0]))
     assert timings[3:] == [("town baselines", name)] * rows  # one baseline per flat type sold recently
 
 

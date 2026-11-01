@@ -131,7 +131,8 @@ def recorded_id(resp):
 def test_signed_out_visitors_and_ordinary_buyers_get_403_on_every_admin_route(mode, app, make_user):
     ordinary, signed_out = make_user(mode), Session(app)
     for session in (ordinary, signed_out):
-        assert session.get("/admin", mode).status_code == 403
+        refused = session.get("/admin", mode)
+        assert refused.status_code == 403 and "This page is for administrators." in refused.text
         for path in ADMIN_POSTS:
             assert session.post(path, mode, txn_id="1").status_code == 403, path
     admin = make_user(mode, admin=True)
@@ -211,13 +212,13 @@ def test_record_list_and_delete_through_the_pages(mode, make_user, plan, cleanup
     txn_id = recorded_id(page)
     assert "record sale (write):" in page.text
     assert ("town figures refresh:" in page.text) == (mode == "pg")  # PostgreSQL times the refresh on its own
-    assert f"<td>{txn_id}</td>" in page.text and "$612,345.67" in page.text
+    assert f'<td data-label="Id">{txn_id}</td>' in page.text and "$612,345.67" in page.text
     assert state_of(mode, cleanup)[0] == before[0] + 1
     assert "$612,345.67" in building_page(admin, mode, plan)  # the block's recent sales include the new sale
 
     page = admin.follow(admin.post("/admin/sales/delete", mode, txn_id=str(txn_id)))
     assert notice(page).startswith(f"Sale {txn_id} deleted.")
-    assert f"<td>{txn_id}</td>" not in page.text
+    assert f'<td data-label="Id">{txn_id}</td>' not in page.text
     assert state_of(mode, cleanup)[0] == before[0]
 
 
@@ -255,7 +256,7 @@ def test_the_rollback_demos_leave_the_counts_and_the_block_unchanged(mode, make_
     assert notice(page).startswith("Rolled back on purpose: the sale was deleted, then failed before commit")
     assert state_of(mode, cleanup) == counts
     assert building_page(admin, mode, plan) == with_sale
-    assert f"<td>{created}</td>" in page.text
+    assert f'<td data-label="Id">{created}</td>' in page.text
     admin.follow(admin.post("/admin/sales/delete", mode, txn_id=str(created)))
     assert building_page(admin, mode, plan) == building_before
 

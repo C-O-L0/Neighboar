@@ -79,12 +79,12 @@
   {% else %}
   <p>Run <strong>{{ bench.name }}</strong> on the full data, warm cache, 50 timed runs for each of 3 parameter sets per case. The figure is the median of the three medians. Full tables and conditions: <code>bench/results/{{ bench.name }}/RESULTS.md</code>.</p>
   <div class="table-wrap">
-  <table class="bench">
+  <table class="stack bench">
     <caption class="sr">Median milliseconds per case in each database</caption>
     <thead><tr><th>Case</th><th>PostgreSQL (ms)</th><th>MongoDB (ms)</th><th>Lower</th></tr></thead>
     <tbody>
       {% for c in bench.cases %}
-      <tr><td><code>{{ c.case }}</code><br><span class="hint">{{ c.pair|replace("_", " ")|capitalize }}</span></td><td>{{ '%.1f'|format(c.pg_ms) if c.pg_ms is not none else '-' }}</td><td>{{ '%.1f'|format(c.mongo_ms) if c.mongo_ms is not none else '-' }}</td><td>{{ c.faster or '-' }}</td></tr>
+      <tr><td data-label="Case"><code>{{ c.case }}</code><br><span class="hint">{{ c.pair|replace("_", " ")|capitalize }}</span></td><td data-label="PostgreSQL (ms)">{{ '%.1f'|format(c.pg_ms) if c.pg_ms is not none else '-' }}</td><td data-label="MongoDB (ms)">{{ '%.1f'|format(c.mongo_ms) if c.mongo_ms is not none else '-' }}</td><td data-label="Lower">{{ c.faster or '-' }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

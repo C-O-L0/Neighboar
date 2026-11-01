@@ -106,13 +106,13 @@
   </div>
   {% if recent %}
   <div class="table-wrap">
-  <table class="recent">
+  <table class="stack recent">
     <caption class="sr">Recent prices by flat type</caption>
     <thead><tr><th>Flat type</th><th>Sales</th><th>{{ ui.term('Typical price', 'typical-price') }}</th><th>Average per sqm</th><th>Against {{ town }}</th></tr></thead>
     <tbody>
       {% for row in recent %}
       {% set r = row.r %}
-      <tr><td class="nowrap">{{ r.flat_type|flat_label }}</td><td class="nowrap">{{ r.n }}{{ ui.few(r.n, few_sales) }}</td><td>{{ r.median_price|money }}</td><td>{{ r.avg_psm|per_sqm }}</td><td>{% if row.tags is none %}<span class="hint">Too few town sales to compare</span>{% else %}{{ ui.tag_list(row.tags, town) }}{% endif %}</td></tr>
+      <tr><td data-label="Flat type" class="nowrap">{{ r.flat_type|flat_label }}</td><td data-label="Sales" class="nowrap">{{ r.n }}{{ ui.few(r.n, few_sales) }}</td><td data-label="Typical price">{{ r.median_price|money }}</td><td data-label="Average per sqm">{{ r.avg_psm|per_sqm }}</td><td data-label="Against {{ town }}">{% if row.tags is none %}<span class="hint">Too few town sales to compare</span>{% else %}{{ ui.tag_list(row.tags, town) }}{% endif %}</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -131,12 +131,12 @@
     <a href="{{ sales_link }}">Show all {{ b.stats.txn_count }}</a>
   </div>
   <div class="table-wrap">
-  <table class="sales">
+  <table class="stack sales">
     <caption class="sr">Latest sales</caption>
     <thead><tr><th>Month</th><th>Flat type</th><th>Storey</th><th>Area (sqm)</th><th>Price</th><th>Per sqm</th><th>Model</th></tr></thead>
     <tbody>
       {% for r in b.recent_sales %}
-      <tr><td class="nowrap">{{ r.txn_month|month }}</td><td class="nowrap">{{ r.flat_type|flat_label }}</td><td class="nowrap">{{ r.storey_min|storey(r.storey_max) }}</td><td>{{ r.floor_area_sqm }}</td><td>{{ r.resale_price|money }}</td><td>{{ r.price_psm|per_sqm }}</td><td>{{ r.flat_model }}</td></tr>
+      <tr><td data-label="Month" class="nowrap">{{ r.txn_month|month }}</td><td data-label="Flat type" class="nowrap">{{ r.flat_type|flat_label }}</td><td data-label="Storey" class="nowrap">{{ r.storey_min|storey(r.storey_max) }}</td><td data-label="Area (sqm)">{{ r.floor_area_sqm }}</td><td data-label="Price">{{ r.resale_price|money }}</td><td data-label="Per sqm">{{ r.price_psm|per_sqm }}</td><td data-label="Model">{{ r.flat_model }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

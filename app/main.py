@@ -6,7 +6,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
@@ -35,6 +37,13 @@ from app.services.guards import csrf_guard, load_account, load_data_month
 from app.templating import templates
 
 BASE = Path(__file__).resolve().parent
+
+
+ERRORS = {
+    403: ("Not allowed", "The form has expired or you cannot do this here. Go back, reload the page and try again."),
+    404: ("Page not found", "There is no page at this address."),
+    405: ("Not allowed", "This address cannot be opened that way."),
+}
 
 
 def create_app() -> FastAPI:
@@ -67,6 +76,18 @@ def create_app() -> FastAPI:
     app.state.throttle = LoginThrottle()  # per process; see docs
     app.state.admin = AdminState()  # per process: the admin write lock and the stale-figures flag
     app.state.captures = Captures()  # per process: the last page's queries per session, for /demo
+
+    @app.exception_handler(StarletteHTTPException)
+    async def error_page(request: Request, exc: StarletteHTTPException):
+        """Pages get an HTML error in the site's frame; the JSON API and chart files keep the plain response."""
+        if request.url.path.startswith(("/api/", "/static/", "/demo/charts/")) or exc.status_code not in ERRORS:
+            return await http_exception_handler(request, exc)
+        heading, message = ERRORS[exc.status_code]
+        if exc.detail == "Administrator access required":
+            message = "This page is for administrators. Sign in with an administrator account to use it."
+        return templates.TemplateResponse(
+            request, "error.html", {"heading": heading, "message": message}, exc.status_code, exc.headers
+        )
 
     @app.middleware("http")
     async def db_mode(request: Request, call_next):

@@ -137,7 +137,7 @@ def test_both_databases_render_the_same_results():
 @pytest.mark.parametrize("db", ["pg", "mongo"])
 def test_row_formatting(db):
     page = main_of(get(f"/search?street=QUEEN%27S&db={db}"))
-    assert re.search(r'<td class="nowrap">\$\d{1,3}(,\d{3})+</td>', page)  # whole dollars, on one line
+    assert re.search(r'<td data-label="Price" class="nowrap">\$\d{1,3}(,\d{3})+</td>', page)  # whole dollars
     assert re.search(r"\d\d TO \d\d", page)
     assert re.search(r"\d+ years?( \d\d months?)?", page)
     assert re.search(r'<a href="/block/\d+[^"]*">Queen&#39;s Rd</a>', page)

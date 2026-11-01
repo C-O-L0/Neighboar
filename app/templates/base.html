@@ -18,8 +18,9 @@
         Neighboar
       </a>
       <nav class="menu" aria-label="Main">
-        {% for href, label in [('/', 'Find a home'), ('/price-check', 'Check a price'), ('/trends', 'Town trends')] %}
-        <a href="{{ href }}"{% if path == href %} aria-current="page"{% endif %}>{{ label }}</a>
+        {# Signed in, four items do not fit a phone: the short label shows there, the full one stays for screen readers. #}
+        {% for href, label, short, current in [('/', 'Find a home', 'Find', ('/', '/explore')), ('/price-check', 'Check a price', 'Price check', ('/price-check',)), ('/trends', 'Town trends', 'Trends', ('/trends',))] %}
+        <a href="{{ href }}"{% if path in current %} aria-current="page"{% endif %}>{% if account %}<span class="label-long">{{ label }}</span><span class="label-short" aria-hidden="true">{{ short }}</span>{% else %}{{ label }}{% endif %}</a>
         {% endfor %}
         {% if account %}<a href="/shortlist"{% if path in ('/shortlist', '/household') %} aria-current="page"{% endif %}>Shortlist{% if shortlist %} <span class="menu-count">{{ shortlist.count }}</span>{% endif %}</a>{% endif %}
       </nav>
